@@ -13,7 +13,7 @@ class FinderMenuSync: FIFinderSync {
         guard menuKind == .contextualMenuForContainer || menuKind == .contextualMenuForItems else { return nil }
         let menu = NSMenu(title: "")
         for item in menuItems where !isHidden(item.id) {
-            let entry = NSMenuItem(title: item.title, action: nil, keyEquivalent: "")
+            let entry = NSMenuItem(title: NSLocalizedString(item.title, comment: ""), action: nil, keyEquivalent: "")
             switch item.id {
             case "new-file": entry.action = #selector(newFile(_:))
             case "terminal": entry.action = #selector(openTerminal(_:))
@@ -74,7 +74,7 @@ class FinderMenuSync: FIFinderSync {
             item.image = flatten(NSWorkspace.shared.icon(forFile: appURL.path), size: NSSize(width: 16, height: 16))
         }
         if !sub.items.isEmpty { sub.addItem(.separator()) }
-        sub.addItem(withTitle: "Other App…", action: #selector(FinderMenuSync.openWithOther(_:)), keyEquivalent: "")
+        sub.addItem(withTitle: NSLocalizedString("Other App…", comment: ""), action: #selector(FinderMenuSync.openWithOther(_:)), keyEquivalent: "")
             .image = symbol("ellipsis.circle")
         return sub
     }

@@ -9,7 +9,7 @@ final class SettingsWindowController: NSWindowController {
 
     convenience init() {
         let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "Finder Menu Settings"
+        window.title = NSLocalizedString("Finder Menu Settings", comment: "")
         self.init(window: window)
         window.contentView = makeContent()
         window.setContentSize(window.contentView!.fittingSize)
@@ -33,7 +33,7 @@ final class SettingsWindowController: NSWindowController {
         header.spacing = 12
 
         let checkboxes = menuItems.enumerated().map { index, item in
-            let box = NSButton(checkboxWithTitle: item.title, target: self, action: #selector(toggleItem(_:)))
+            let box = NSButton(checkboxWithTitle: NSLocalizedString(item.title, comment: ""), target: self, action: #selector(toggleItem(_:)))
             box.tag = index
             box.state = isHidden(item.id) ? .off : .on
             return box
@@ -44,12 +44,12 @@ final class SettingsWindowController: NSWindowController {
         terminalPopup.isEnabled = !isHidden("terminal")
         reloadTerminalPopup()
 
-        let note = NSTextField(labelWithString: "Changes apply the next time you right-click in Finder.")
+        let note = NSTextField(labelWithString: NSLocalizedString("Changes apply the next time you right-click in Finder.", comment: ""))
         note.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         note.textColor = .secondaryLabelColor
 
-        let itemsLabel = Self.sectionLabel("Show in the right-click menu")
-        let terminalLabel = Self.sectionLabel("Open Terminal Here uses")
+        let itemsLabel = Self.sectionLabel(NSLocalizedString("Show in the right-click menu", comment: ""))
+        let terminalLabel = Self.sectionLabel(NSLocalizedString("Open Terminal Here uses", comment: ""))
         let stack = NSStackView(views: [header, itemsLabel] + checkboxes + [terminalLabel, terminalPopup, note])
         stack.orientation = .vertical
         stack.alignment = .leading
@@ -97,7 +97,8 @@ final class SettingsWindowController: NSWindowController {
         }
 
         let menu = NSMenu()
-        menu.addItem(withTitle: "Automatic (\(installed.first?.name ?? "Terminal"))", action: nil, keyEquivalent: "")
+        let autoFormat = NSLocalizedString("Automatic (%@)", comment: "")
+        menu.addItem(withTitle: String(format: autoFormat, installed.first?.name ?? "Terminal"), action: nil, keyEquivalent: "")
         menu.addItem(.separator())
         for choice in choices {
             let item = menu.addItem(withTitle: choice.name, action: nil, keyEquivalent: "")
@@ -109,7 +110,7 @@ final class SettingsWindowController: NSWindowController {
             }
         }
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Other App…", action: nil, keyEquivalent: "").tag = chooseOtherTag
+        menu.addItem(withTitle: NSLocalizedString("Other App…", comment: ""), action: nil, keyEquivalent: "").tag = chooseOtherTag
         terminalPopup.menu = menu
 
         let selected = menu.items.first { ($0.representedObject as? String) == chosenTerminal }
@@ -120,8 +121,8 @@ final class SettingsWindowController: NSWindowController {
         guard let item = sender.selectedItem else { return }
         if item.tag == chooseOtherTag {
             let panel = NSOpenPanel()
-            panel.message = "Choose the app for Open Terminal Here:"
-            panel.prompt = "Choose"
+            panel.message = NSLocalizedString("Choose the app for Open Terminal Here:", comment: "")
+            panel.prompt = NSLocalizedString("Choose", comment: "")
             panel.directoryURL = URL(fileURLWithPath: "/Applications")
             panel.allowedContentTypes = [.application]
             if panel.runModal() == .OK, let url = panel.url, let id = Bundle(url: url)?.bundleIdentifier {

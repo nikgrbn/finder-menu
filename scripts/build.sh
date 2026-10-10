@@ -11,10 +11,15 @@ TARGET="$(uname -m)-apple-macos13.0"
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$EXT/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$EXT/Contents/MacOS" "$EXT/Contents/Resources"
 cp Resources/App-Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 cp Resources/Extension-Info.plist "$EXT/Contents/Info.plist"
+for lproj in Resources/*.lproj; do
+  [ -d "$lproj" ] || continue
+  cp -R "$lproj" "$APP/Contents/Resources/"
+  cp -R "$lproj" "$EXT/Contents/Resources/"
+done
 
 xcrun swiftc -swift-version 5 -O -sdk "$SDK" -target "$TARGET" \
   -module-name FinderMenuExtension -parse-as-library -application-extension \

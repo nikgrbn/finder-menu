@@ -64,9 +64,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func makeMainMenu() -> NSMenu {
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit Finder Menu", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        let windowMenu = NSMenu(title: "Window")
-        windowMenu.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        appMenu.addItem(withTitle: NSLocalizedString("Quit Finder Menu", comment: ""), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let windowMenu = NSMenu(title: NSLocalizedString("Window", comment: ""))
+        windowMenu.addItem(withTitle: NSLocalizedString("Close", comment: ""), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         let main = NSMenu()
         for submenu in [appMenu, windowMenu] {
             let item = NSMenuItem()
@@ -178,8 +178,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSOpenPanel()
-        panel.message = "Open “\((dir as NSString).lastPathComponent)” with:"
-        panel.prompt = "Open"
+        let openFormat = NSLocalizedString("Open “%@” with:", comment: "")
+        panel.message = String(format: openFormat, (dir as NSString).lastPathComponent)
+        panel.prompt = NSLocalizedString("Open", comment: "")
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.allowedContentTypes = [.application]
         open(dir, withAppAt: panel.runModal() == .OK ? panel.url : nil)
@@ -197,13 +198,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         var name = "untitled.txt"
         var problem: String?
         while true {
-            let info = (problem.map { $0 + "\n\n" } ?? "") + "In: " + (dir as NSString).abbreviatingWithTildeInPath
+            let inFormat = NSLocalizedString("In: %@", comment: "")
+            let inString = String(format: inFormat, (dir as NSString).abbreviatingWithTildeInPath)
+            let info = (problem.map { $0 + "\n\n" } ?? "") + inString
             guard let entered = askFileName(info: info, suggested: name) else { return }
 
             name = entered.trimmingCharacters(in: .whitespaces)
             let full = (dir as NSString).appendingPathComponent(name)
             if name.isEmpty || name.contains("/") || name == "." || name == ".." {
-                problem = "⚠️ That isn't a valid file name."
+                problem = NSLocalizedString("⚠️ That isn't a valid file name.", comment: "")
                 continue
             }
             do {
@@ -212,9 +215,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: full)])
                 return
             } catch let error as CocoaError where error.code == .fileWriteFileExists {
-                problem = "⚠️ \"\(name)\" already exists."
+                let existsFormat = NSLocalizedString("⚠️ \"%@\" already exists.", comment: "")
+                problem = String(format: existsFormat, name)
             } catch {
-                problem = "⚠️ Couldn't create the file here (no permission?)."
+                problem = NSLocalizedString("⚠️ Couldn't create the file here (no permission?).", comment: "")
             }
         }
     }
@@ -222,10 +226,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func askFileName(info: String, suggested: String) -> String? {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "New File"
+        alert.messageText = NSLocalizedString("New File", comment: "")
         alert.informativeText = info
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: NSLocalizedString("Create", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
         field.stringValue = suggested
         field.placeholderString = "name.ext"

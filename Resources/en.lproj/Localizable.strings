@@ -1,0 +1,34 @@
+/* Menu Items */
+"New File…" = "New File…";
+"Open Terminal Here" = "Open Terminal Here";
+"Open Folder With" = "Open Folder With";
+"Copy Path" = "Copy Path";
+"Go to Parent Folder" = "Go to Parent Folder";
+"Other App…" = "Other App…";
+
+/* New File Dialog */
+"New File" = "New File";
+"In: %@" = "In: %@";
+"⚠️ That isn't a valid file name." = "⚠️ That isn't a valid file name.";
+"⚠️ \"%@\" already exists." = "⚠️ \"%@\" already exists.";
+"⚠️ Couldn't create the file here (no permission?)." = "⚠️ Couldn't create the file here (no permission?).";
+"Create" = "Create";
+"Cancel" = "Cancel";
+
+/* Open Folder With Dialog */
+"Open “%@” with:" = "Open “%@” with:";
+"Open" = "Open";
+
+/* Main Menu */
+"Quit Finder Menu" = "Quit Finder Menu";
+"Window" = "Window";
+"Close" = "Close";
+
+/* Settings Window */
+"Finder Menu Settings" = "Finder Menu Settings";
+"Show in the right-click menu" = "Show in the right-click menu";
+"Open Terminal Here uses" = "Open Terminal Here uses";
+"Automatic (%@)" = "Automatic (%@)";
+"Changes apply the next time you right-click in Finder." = "Changes apply the next time you right-click in Finder.";
+"Choose the app for Open Terminal Here:" = "Choose the app for Open Terminal Here:";
+"Choose" = "Choose";

@@ -1,0 +1,34 @@
+/* Menu Items */
+"New File…" = "Neue Datei…";
+"Open Terminal Here" = "Terminal hier öffnen";
+"Open Folder With" = "Ordner öffnen mit";
+"Copy Path" = "Pfad kopieren";
+"Go to Parent Folder" = "Übergeordneter Ordner";
+"Other App…" = "Andere App…";
+
+/* New File Dialog */
+"New File" = "Neue Datei";
+"In: %@" = "In: %@";
+"⚠️ That isn't a valid file name." = "⚠️ Das ist kein gültiger Dateiname.";
+"⚠️ \"%@\" already exists." = "⚠️ „%@“ existiert bereits.";
+"⚠️ Couldn't create the file here (no permission?)." = "⚠️ Datei konnte hier nicht erstellt werden (keine Berechtigung?).";
+"Create" = "Erstellen";
+"Cancel" = "Abbrechen";
+
+/* Open Folder With Dialog */
+"Open “%@” with:" = "„%@“ öffnen mit:";
+"Open" = "Öffnen";
+
+/* Main Menu */
+"Quit Finder Menu" = "Finder Menu beenden";
+"Window" = "Fenster";
+"Close" = "Schließen";
+
+/* Settings Window */
+"Finder Menu Settings" = "Finder Menu Einstellungen";
+"Show in the right-click menu" = "Im Kontextmenü anzeigen";
+"Open Terminal Here uses" = "„Terminal hier öffnen“ verwendet";
+"Automatic (%@)" = "Automatisch (%@)";
+"Changes apply the next time you right-click in Finder." = "Änderungen werden beim nächsten Rechtsklick im Finder wirksam.";
+"Choose the app for Open Terminal Here:" = "Wähle die App für „Terminal hier öffnen“:";
+"Choose" = "Auswählen";
