@@ -22,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                   let dir = folder(for: path) else { continue }
             switch c.host {
             case "newfile":
-                // Template content comes from settings, not the URL — only the id travels in the link.
+                // Template content comes from saved settings, not the URL — only the id travels in the link.
                 let templateID = c.queryItems?.first(where: { $0.name == "template" })?.value
                 if let templateID {
                     guard let template = fileTemplate(id: templateID) else { continue }
@@ -30,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 } else {
                     newFile(in: dir)
                 }
+            case "managetemplates": manageTemplates()
             case "terminal": openTerminal(at: dir); return
             case "openwith":
                 let appID = c.queryItems?.first(where: { $0.name == "app" })?.value
@@ -215,12 +216,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func createFile(in dir: String, suggested: String, contents: Data, ask: Bool) {
         var name = suggested
+        var saveAsTemplate = false
+        var openAfterCreate = false
         var problem: String?
         while true {
             if ask || problem != nil {
                 let info = (problem.map { $0 + "\n\n" } ?? "") + "In: " + (dir as NSString).abbreviatingWithTildeInPath
-                guard let entered = askFileName(info: info, suggested: name) else { return }
-                name = entered.trimmingCharacters(in: .whitespaces)
+                guard let options = askFileName(info: info, suggested: name,
+                                                saveAsTemplate: saveAsTemplate,
+                                                openAfterCreate: openAfterCreate) else { return }
+                name = options.name.trimmingCharacters(in: .whitespaces)
+                saveAsTemplate = options.saveAsTemplate
+                openAfterCreate = options.openAfterCreate
             }
             let full = (dir as NSString).appendingPathComponent(name)
             if !isValidTemplateFilename(name) {
@@ -230,7 +237,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 // A separate existence check cannot prevent another process from creating the same path.
                 try contents.write(to: URL(fileURLWithPath: full), options: .withoutOverwriting)
-                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: full)])
+                let url = URL(fileURLWithPath: full)
+                if saveAsTemplate {
+                    // New File always creates an empty file; the template stores the name (and empty contents).
+                    saveFileTemplate(filename: name, content: String(data: contents, encoding: .utf8) ?? "")
+                }
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+                if openAfterCreate {
+                    NSWorkspace.shared.open(url)
+                }
                 return
             } catch let error as CocoaError where error.code == .fileWriteFileExists {
                 problem = "⚠️ \"\(name)\" already exists."
@@ -254,19 +269,76 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return candidate
     }
 
-    private func askFileName(info: String, suggested: String) -> String? {
+    private struct NewFileOptions {
+        var name: String
+        var saveAsTemplate: Bool
+        var openAfterCreate: Bool
+    }
+
+    private func askFileName(info: String, suggested: String,
+                             saveAsTemplate: Bool, openAfterCreate: Bool) -> NewFileOptions? {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "New File"
         alert.informativeText = info
         alert.addButton(withTitle: "Create")
         alert.addButton(withTitle: "Cancel")
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
+
+        let field = NSTextField(frame: .zero)
         field.stringValue = suggested
         field.placeholderString = "name.ext"
-        alert.accessoryView = field
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.widthAnchor.constraint(equalToConstant: 320).isActive = true
+        field.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+        let saveBox = NSButton(checkboxWithTitle: "Save as template", target: nil, action: nil)
+        saveBox.state = saveAsTemplate ? .on : .off
+        let openBox = NSButton(checkboxWithTitle: "Open after creation", target: nil, action: nil)
+        openBox.state = openAfterCreate ? .on : .off
+
+        let stack = NSStackView(views: [field, saveBox, openBox])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 8
+        stack.setCustomSpacing(12, after: field)
+        stack.frame = NSRect(x: 0, y: 0, width: 320, height: 78)
+        alert.accessoryView = stack
         alert.window.initialFirstResponder = field
-        return alert.runModal() == .alertFirstButtonReturn ? field.stringValue : nil
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return NewFileOptions(name: field.stringValue,
+                              saveAsTemplate: saveBox.state == .on,
+                              openAfterCreate: openBox.state == .on)
+    }
+
+    // List + remove only — templates are created from the New File dialog, not from Settings.
+    private func manageTemplates() {
+        NSApp.activate(ignoringOtherApps: true)
+        while true {
+            let templates = fileTemplates
+            let alert = NSAlert()
+            alert.messageText = "Manage Templates"
+            if templates.isEmpty {
+                alert.informativeText = "No templates yet. Create a file with “Save as template” checked."
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+                return
+            }
+            alert.informativeText = "Templates appear under New File in the right-click menu."
+            alert.addButton(withTitle: "Remove")
+            alert.addButton(withTitle: "Done")
+
+            let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 280, height: 25), pullsDown: false)
+            for template in templates {
+                let item = popup.menu?.addItem(withTitle: template.filename, action: nil, keyEquivalent: "")
+                item?.representedObject = template.id
+            }
+            alert.accessoryView = popup
+
+            guard alert.runModal() == .alertFirstButtonReturn,
+                  let id = popup.selectedItem?.representedObject as? String else { return }
+            removeFileTemplate(id: id)
+        }
     }
 }
 

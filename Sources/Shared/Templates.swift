@@ -1,7 +1,8 @@
 import Foundation
 
-// User-defined New File templates. The settings window writes them; the extension only reads
-// them (to build the New File submenu) and the helper creates the file from the chosen id.
+// User-defined New File templates. Saved from the New File dialog ("Save as template");
+// the extension only reads them to build the New File submenu, and the helper creates the
+// file from the chosen id (filename/contents never travel in the findermenu:// URL).
 struct FileTemplate: Equatable {
     var id: String
     var filename: String
@@ -31,6 +32,24 @@ var fileTemplates: [FileTemplate] {
 
 func fileTemplate(id: String) -> FileTemplate? {
     fileTemplates.first { $0.id == id }
+}
+
+// Upsert by filename so saving "notes.md" again updates the existing template.
+func saveFileTemplate(filename: String, content: String = "") {
+    guard isValidTemplateFilename(filename) else { return }
+    var templates = fileTemplates
+    let updated = FileTemplate(id: templates.first { $0.filename == filename }?.id ?? UUID().uuidString,
+                               filename: filename, content: content)
+    if let index = templates.firstIndex(where: { $0.filename == filename }) {
+        templates[index] = updated
+    } else {
+        templates.append(updated)
+    }
+    fileTemplates = templates
+}
+
+func removeFileTemplate(id: String) {
+    fileTemplates = fileTemplates.filter { $0.id != id }
 }
 
 // Same rules the helper uses when creating a file: no empty names, no path separators.

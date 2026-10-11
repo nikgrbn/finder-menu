@@ -86,8 +86,8 @@ class FinderMenuSync: FIFinderSync {
         return sub
     }
 
-    // Templates become one-click items; Custom… keeps the name dialog. Finder copies the menu, so
-    // each template item carries its id in representedObject.
+    // Templates become one-click items; Custom… keeps the name dialog (with Save as template /
+    // Open after creation). Finder copies the menu, so each template item carries its id.
     static func newFileMenu(_ templates: [FileTemplate]) -> NSMenu {
         let sub = NSMenu(title: "")
         for template in templates {
@@ -98,6 +98,8 @@ class FinderMenuSync: FIFinderSync {
         sub.addItem(.separator())
         sub.addItem(withTitle: "Custom…", action: #selector(FinderMenuSync.newFile(_:)), keyEquivalent: "")
             .image = symbol("doc.badge.plus")
+        sub.addItem(withTitle: "Manage Templates…", action: #selector(FinderMenuSync.manageTemplates(_:)), keyEquivalent: "")
+            .image = symbol("gearshape")
         return sub
     }
 
@@ -132,6 +134,12 @@ class FinderMenuSync: FIFinderSync {
               let id = (sender as? NSMenuItem)?.representedObject as? String,
               fileTemplate(id: id) != nil else { return }
         callHelper("newfile", dir.path, template: id)
+    }
+
+    @objc func manageTemplates(_ sender: AnyObject?) {
+        // Path is unused for this action; still required so the helper accepts the link.
+        guard let dir = currentFolder else { return }
+        callHelper("managetemplates", dir.path)
     }
 
     @objc func openTerminal(_ sender: AnyObject?) {
