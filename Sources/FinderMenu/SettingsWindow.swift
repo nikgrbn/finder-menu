@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 final class SettingsWindowController: NSWindowController {
     private let terminalPopup = NSPopUpButton()
     private let chooseOtherTag = 1
+    private let templatesStack = NSStackView()
+    private weak var rootStack: NSStackView?
 
     convenience init() {
         let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
@@ -44,13 +46,27 @@ final class SettingsWindowController: NSWindowController {
         terminalPopup.isEnabled = !isHidden("terminal")
         reloadTerminalPopup()
 
+        templatesStack.orientation = .vertical
+        templatesStack.alignment = .leading
+        templatesStack.spacing = 4
+        reloadTemplates()
+
+        let addTemplate = NSButton(title: "Add Template…", target: self, action: #selector(addTemplate(_:)))
+        addTemplate.bezelStyle = .rounded
+
         let note = NSTextField(labelWithString: "Changes apply the next time you right-click in Finder.")
         note.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         note.textColor = .secondaryLabelColor
 
         let itemsLabel = Self.sectionLabel("Show in the right-click menu")
         let terminalLabel = Self.sectionLabel("Open Terminal Here uses")
-        let stack = NSStackView(views: [header, itemsLabel] + checkboxes + [terminalLabel, terminalPopup, note])
+        let templatesLabel = Self.sectionLabel("New File templates")
+        let templatesHint = NSTextField(wrappingLabelWithString: "Shown under New File in the right-click menu. Each one creates a file with that name (and optional contents) in one click.")
+        templatesHint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        templatesHint.textColor = .secondaryLabelColor
+        templatesHint.preferredMaxLayoutWidth = 320
+
+        let stack = NSStackView(views: [header, itemsLabel] + checkboxes + [terminalLabel, terminalPopup, templatesLabel, templatesHint, templatesStack, addTemplate, note])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 8
@@ -59,7 +75,12 @@ final class SettingsWindowController: NSWindowController {
         stack.setCustomSpacing(20, after: checkboxes.last!)
         stack.setCustomSpacing(10, after: terminalLabel)
         stack.setCustomSpacing(20, after: terminalPopup)
+        stack.setCustomSpacing(6, after: templatesLabel)
+        stack.setCustomSpacing(8, after: templatesHint)
+        stack.setCustomSpacing(8, after: templatesStack)
+        stack.setCustomSpacing(20, after: addTemplate)
         terminalPopup.widthAnchor.constraint(greaterThanOrEqualToConstant: 240).isActive = true
+        rootStack = stack
 
         // NSStackView ignores its trailing inset, so pin the margins explicitly.
         let content = NSView()
@@ -78,6 +99,121 @@ final class SettingsWindowController: NSWindowController {
         let label = NSTextField(labelWithString: text)
         label.font = .boldSystemFont(ofSize: NSFont.systemFontSize)
         return label
+    }
+
+    private func resizeToFit() {
+        guard let window, let content = window.contentView else { return }
+        window.setContentSize(content.fittingSize)
+    }
+
+    private func reloadTemplates() {
+        templatesStack.views.forEach { $0.removeFromSuperview() }
+        let templates = fileTemplates
+        if templates.isEmpty {
+            let empty = NSTextField(labelWithString: "No templates yet.")
+            empty.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+            empty.textColor = .tertiaryLabelColor
+            templatesStack.addArrangedSubview(empty)
+        } else {
+            for (index, template) in templates.enumerated() {
+                templatesStack.addArrangedSubview(templateRow(template, index: index))
+            }
+        }
+        resizeToFit()
+    }
+
+    private func templateRow(_ template: FileTemplate, index: Int) -> NSView {
+        let name = NSButton(title: template.filename, target: self, action: #selector(editTemplate(_:)))
+        name.bezelStyle = .inline
+        name.isBordered = false
+        name.contentTintColor = .labelColor
+        name.tag = index
+        name.toolTip = template.content.isEmpty ? "Edit template" : "Edit template (has contents)"
+        name.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let remove = NSButton(title: "Remove", target: self, action: #selector(removeTemplate(_:)))
+        remove.bezelStyle = .inline
+        remove.tag = index
+
+        let row = NSStackView(views: [name, remove])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 8
+        row.widthAnchor.constraint(greaterThanOrEqualToConstant: 280).isActive = true
+        return row
+    }
+
+    @objc private func addTemplate(_ sender: Any?) {
+        editTemplate(existing: nil)
+    }
+
+    @objc private func editTemplate(_ sender: NSButton) {
+        let templates = fileTemplates
+        guard templates.indices.contains(sender.tag) else { return }
+        editTemplate(existing: templates[sender.tag])
+    }
+
+    @objc private func removeTemplate(_ sender: NSButton) {
+        var templates = fileTemplates
+        guard templates.indices.contains(sender.tag) else { return }
+        templates.remove(at: sender.tag)
+        fileTemplates = templates
+        reloadTemplates()
+    }
+
+    private func editTemplate(existing: FileTemplate?) {
+        let alert = NSAlert()
+        alert.messageText = existing == nil ? "Add Template" : "Edit Template"
+        alert.informativeText = "Filename is what appears in the menu and what the file is named. Contents are optional."
+        alert.addButton(withTitle: existing == nil ? "Add" : "Save")
+        alert.addButton(withTitle: "Cancel")
+
+        let filename = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
+        filename.stringValue = existing?.filename ?? "untitled.md"
+        filename.placeholderString = "name.ext"
+
+        let contents = NSTextView(frame: NSRect(x: 0, y: 0, width: 320, height: 120))
+        contents.string = existing?.content ?? ""
+        contents.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        contents.isRichText = false
+        contents.allowsUndo = true
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 320, height: 120))
+        scroll.borderType = .bezelBorder
+        scroll.hasVerticalScroller = true
+        scroll.documentView = contents
+
+        let filenameLabel = NSTextField(labelWithString: "Filename")
+        filenameLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        let contentsLabel = NSTextField(labelWithString: "Contents (optional)")
+        contentsLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+
+        let stack = NSStackView(views: [filenameLabel, filename, contentsLabel, scroll])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 4
+        stack.setCustomSpacing(10, after: filename)
+        stack.frame = NSRect(x: 0, y: 0, width: 320, height: 180)
+        alert.accessoryView = stack
+        alert.window.initialFirstResponder = filename
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let name = filename.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isValidTemplateFilename(name) else {
+            let err = NSAlert()
+            err.messageText = "That isn't a valid file name."
+            err.runModal()
+            return
+        }
+
+        var templates = fileTemplates
+        let updated = FileTemplate(id: existing?.id ?? UUID().uuidString, filename: name, content: contents.string)
+        if let existing, let index = templates.firstIndex(where: { $0.id == existing.id }) {
+            templates[index] = updated
+        } else {
+            templates.append(updated)
+        }
+        fileTemplates = templates
+        reloadTemplates()
     }
 
     @objc private func toggleItem(_ sender: NSButton) {

@@ -21,7 +21,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                   let path = c.queryItems?.first(where: { $0.name == "path" })?.value,
                   let dir = folder(for: path) else { continue }
             switch c.host {
-            case "newfile": newFile(in: dir)
+            case "newfile":
+                // Template content comes from settings, not the URL — only the id travels in the link.
+                let templateID = c.queryItems?.first(where: { $0.name == "template" })?.value
+                if let templateID {
+                    guard let template = fileTemplate(id: templateID) else { continue }
+                    newFile(in: dir, from: template)
+                } else {
+                    newFile(in: dir)
+                }
             case "terminal": openTerminal(at: dir); return
             case "openwith":
                 let appID = c.queryItems?.first(where: { $0.name == "app" })?.value
@@ -194,21 +202,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func newFile(in dir: String) {
-        var name = "untitled.txt"
+        createFile(in: dir, suggested: "untitled.txt", contents: Data(), ask: true)
+    }
+
+    // One click from the New File submenu: use the template's name and contents, and if that name
+    // is taken, pick the next free name the way Finder does (notes.md → notes 2.md).
+    private func newFile(in dir: String, from template: FileTemplate) {
+        guard isValidTemplateFilename(template.filename) else { return }
+        let name = unusedFilename(template.filename, in: dir)
+        createFile(in: dir, suggested: name, contents: Data(template.content.utf8), ask: false)
+    }
+
+    private func createFile(in dir: String, suggested: String, contents: Data, ask: Bool) {
+        var name = suggested
         var problem: String?
         while true {
-            let info = (problem.map { $0 + "\n\n" } ?? "") + "In: " + (dir as NSString).abbreviatingWithTildeInPath
-            guard let entered = askFileName(info: info, suggested: name) else { return }
-
-            name = entered.trimmingCharacters(in: .whitespaces)
+            if ask || problem != nil {
+                let info = (problem.map { $0 + "\n\n" } ?? "") + "In: " + (dir as NSString).abbreviatingWithTildeInPath
+                guard let entered = askFileName(info: info, suggested: name) else { return }
+                name = entered.trimmingCharacters(in: .whitespaces)
+            }
             let full = (dir as NSString).appendingPathComponent(name)
-            if name.isEmpty || name.contains("/") || name == "." || name == ".." {
+            if !isValidTemplateFilename(name) {
                 problem = "⚠️ That isn't a valid file name."
                 continue
             }
             do {
                 // A separate existence check cannot prevent another process from creating the same path.
-                try Data().write(to: URL(fileURLWithPath: full), options: .withoutOverwriting)
+                try contents.write(to: URL(fileURLWithPath: full), options: .withoutOverwriting)
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: full)])
                 return
             } catch let error as CocoaError where error.code == .fileWriteFileExists {
@@ -217,6 +238,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 problem = "⚠️ Couldn't create the file here (no permission?)."
             }
         }
+    }
+
+    // Finder-style duplicate names: "notes.md" → "notes 2.md", "notes 3.md", …
+    private func unusedFilename(_ filename: String, in dir: String) -> String {
+        let ns = filename as NSString
+        let base = ns.deletingPathExtension
+        let ext = ns.pathExtension
+        var candidate = filename
+        var n = 2
+        while FileManager.default.fileExists(atPath: (dir as NSString).appendingPathComponent(candidate)) {
+            candidate = ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)"
+            n += 1
+        }
+        return candidate
     }
 
     private func askFileName(info: String, suggested: String) -> String? {
