@@ -37,6 +37,7 @@
 "Finder Menu Settings" = "Finder Menu Einstellungen";
 "Show in the right-click menu" = "Im Kontextmenü anzeigen";
 "Also on external and network drives" = "Auch auf externen Laufwerken und Netzlaufwerken";
+"Show icons" = "Symbole anzeigen";
 "Open Terminal Here uses" = "„Terminal hier öffnen“ verwendet";
 "Automatic (%@)" = "Automatisch (%@)";
 "Changes apply the next time you right-click in Finder." = "Änderungen werden beim nächsten Rechtsklick im Finder wirksam.";

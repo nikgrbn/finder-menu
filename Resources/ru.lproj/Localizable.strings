@@ -37,6 +37,7 @@
 "Finder Menu Settings" = "Настройки Finder Menu";
 "Show in the right-click menu" = "Показывать в контекстном меню";
 "Also on external and network drives" = "Также на внешних и сетевых дисках";
+"Show icons" = "Показывать значки";
 "Open Terminal Here uses" = "Терминал для «Открыть в терминале»";
 "Automatic (%@)" = "Автоматически (%@)";
 "Changes apply the next time you right-click in Finder." = "Изменения вступят в силу при следующем нажатии правой кнопкой в Finder.";

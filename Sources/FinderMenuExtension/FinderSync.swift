@@ -61,9 +61,9 @@ class FinderMenuSync: FIFinderSync {
     // Finder drops the template flag when it copies the menu, so SF Symbols would always render
     // black. Instead, bake the current appearance's text color into a plain bitmap each time.
     static func symbol(_ name: String, appearance: NSAppearance = NSApplication.shared.effectiveAppearance) -> NSImage? {
-        // Finder's own menu items have icons only since macOS 26, so leave ours out before that. App icons,
-        // as in Open Folder With, don't come from here: Finder's own Open With shows them on every version.
-        guard #available(macOS 26, *) else { return nil }
+        // Show icons in settings, on by default only where Finder's own items have icons (macOS 26 and later).
+        // App icons, as in Open Folder With, don't come from here: Finder's own Open With shows them on every version.
+        guard showsMenuIcons else { return nil }
         guard let base = NSImage(systemSymbolName: name, accessibilityDescription: nil) else { return nil }
         var color = NSColor.black
         appearance.performAsCurrentDrawingAppearance {

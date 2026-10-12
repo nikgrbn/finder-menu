@@ -38,3 +38,15 @@ var showsOnOtherDrives: Bool {
 // The settings window posts this when showsOnOtherDrives changes. Finder only asks the extension about
 // drives it already covers, so the extension can't pick up a newly allowed drive on the next right-click.
 let otherDrivesChanged = Notification.Name("local.findermenu.other-drives-changed")
+
+// Whether the menu items have icons. By default they follow Finder, whose own items have icons only since
+// macOS 26. Only a choice that differs from that is saved, so an untouched Mac keeps following Finder.
+var showsMenuIcons: Bool {
+    get { settings.object(forKey: "MenuIcons") as? Bool ?? menuIconsByDefault }
+    set { if newValue == menuIconsByDefault { settings.removeObject(forKey: "MenuIcons") } else { settings.set(newValue, forKey: "MenuIcons") } }
+}
+
+private var menuIconsByDefault: Bool {
+    if #available(macOS 26, *) { return true }
+    return false
+}
