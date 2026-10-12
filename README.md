@@ -164,7 +164,7 @@ From source:
 
 - **Menu items don't appear:** hold ⌥, right-click Finder in the Dock and choose **Relaunch**. Also check that **Finder Menu** is turned on under System Settings → General → Login Items & Extensions → Finder extensions.
 - **Asked for permission again after reinstalling:** expected. Every build is signed locally with a new signature, so macOS asks again.
-- **A drive shows the Finder Menu icon in Finder's sidebar:** some macOS versions give the drives a Finder extension works on that app's icon. It's only the icon. If it bothers you, untick **Also on external and network drives** in [settings](#settings), which also takes the menu off those drives.
+- **A drive shows the Finder Menu icon in Finder's sidebar:** expected. Finder gives every drive a Finder extension works on that app's icon, except the startup disk, so the menu can't appear on a drive without it. It's only the icon. If it bothers you, untick **Also on external and network drives** in [settings](#settings), which also takes the menu off those drives. [#14](https://github.com/nikgrbn/finder-menu/issues/14) has the details, and ideas for a way around it are welcome there.
 
 ## How it works
 

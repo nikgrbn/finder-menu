@@ -15,7 +15,8 @@ class FinderMenuSync: FIFinderSync {
 
     // Finder shows the menu only in these folders and the folders inside them. "/" is just the startup
     // disk: Finder treats every other drive (USB drives, disk images, network shares, FUSE mounts) as a
-    // separate root, so list each one too.
+    // separate root, so list each one too. Finder then shows this app's icon for each listed drive except
+    // the startup disk in its sidebar. Nothing above a drive can be listed instead, hence the setting.
     @objc private func watchDrives(_ notification: Notification? = nil) {
         var roots = [URL(fileURLWithPath: "/")]
         if showsOnOtherDrives {
