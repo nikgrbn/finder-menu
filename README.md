@@ -66,6 +66,8 @@ Right-clicking a file or folder works too: **Copy Path** copies the selected ite
 
 The menu also appears on external drives, disk images and network shares (such as SMB), not just your Mac's own disk.
 
+On macOS 26 and later the items have icons, like Finder's own. On earlier versions Finder's items have none, so Finder Menu's don't either.
+
 ## New File templates
 
 <p align="center">
