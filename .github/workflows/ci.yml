@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Everyone builds Finder Menu on their own Mac, so try more than one SDK.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test
+        run: scripts/test.sh
+      - name: Build
+        run: scripts/build.sh build
+      - name: Check the build
+        run: |
+          plutil -lint Resources/*.plist
+          codesign --verify --strict --deep "build/Finder Menu.app"
+          # Finder only loads sandboxed extensions.
+          codesign -d --entitlements - "build/Finder Menu.app/Contents/PlugIns/FinderMenuExtension.appex" | grep com.apple.security.app-sandbox

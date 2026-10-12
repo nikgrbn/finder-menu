@@ -128,36 +128,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return SecCodeCheckValidity(sender, [], requirement) == errSecSuccess
     }
 
-    // Only act on existing absolute paths. Files and packages such as .app bundles resolve to the
-    // folder that contains them.
-    private func folder(for path: String) -> String? {
-        guard path.hasPrefix("/") else { return nil }
-        let path = (path as NSString).standardizingPath
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir) else { return nil }
-        let dir = isDir.boolValue && !isPackage(path) ? path : (path as NSString).deletingLastPathComponent
-        return isPackage(dir) ? nil : dir
-    }
-
-    // Checks the real location, so a symlink to an .app counts as a package too.
-    private func isPackage(_ path: String) -> Bool {
-        NSWorkspace.shared.isFilePackage(atPath: (path as NSString).resolvingSymlinksInPath)
-    }
-
     // Moves the Finder window showing `dir` (front-most match, else the front window) up one level.
     private func goUp(from dir: String) {
-        func lit(_ s: String) -> String {
-            "\"" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
-        }
         let parent = (dir as NSString).deletingLastPathComponent
         let script = """
         tell application "Finder"
-            set dest to (POSIX file \(lit(parent)) as alias)
+            set dest to (POSIX file \(appleScriptString(parent)) as alias)
             repeat with w in Finder windows
                 try
                     -- Case-only paths can name different folders on case-sensitive volumes.
                     considering case
-                        if POSIX path of (target of w as alias) is \(lit(dir + "/")) then
+                        if POSIX path of (target of w as alias) is \(appleScriptString(dir + "/")) then
                             set target of w to dest
                             return
                         end if
@@ -261,24 +242,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 problem = NSLocalizedString("⚠️ Couldn't create the file here (no permission?).", comment: "")
             }
         }
-    }
-
-    // Finder-style duplicate names: "notes.md" → "notes 2.md", "notes 3.md", …
-    private func unusedFilename(_ filename: String, in dir: String) -> String {
-        let ns = filename as NSString
-        let base = ns.deletingPathExtension
-        let ext = ns.pathExtension
-        // Unlike fileExists, attributesOfItem doesn't follow symlinks, so a broken link still counts as taken.
-        func taken(_ name: String) -> Bool {
-            (try? FileManager.default.attributesOfItem(atPath: (dir as NSString).appendingPathComponent(name))) != nil
-        }
-        var candidate = filename
-        var n = 2
-        while taken(candidate) {
-            candidate = ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)"
-            n += 1
-        }
-        return candidate
     }
 
     private struct NewFileOptions {

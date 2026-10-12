@@ -175,6 +175,7 @@ From source:
 - `Sources/Shared/Editors.swift` is the IDE list. The extension builds the submenu from it, and the helper refuses links naming any app that isn't on it.
 - `scripts/build.sh` compiles and signs the app; `scripts/finder-menu enable|disable` copies it into `~/Applications` and turns the extension on or off. `install.sh`, `uninstall.sh` and the Homebrew formula all use these two.
 - `Resources/*.lproj` holds the translations, one folder per language. `scripts/build.sh` copies them into both the helper and the extension, because the extension shows the menu titles.
+- `Tests` checks the helper's path handling, the AppleScript escaping, the terminal launch arguments and the translations. `scripts/test.sh` builds and runs them, and CI runs them and a full build on every pull request.
 - `scripts/make-icon.swift` draws the app icon in code and regenerates `Resources/AppIcon.icns` and `docs/icon.png`.
 - `docs/mockups/mockups.html` draws the pictures in this README with HTML and CSS, and `scripts/make-mockups.swift` renders them to `docs/images` in light and dark.
 
@@ -183,7 +184,7 @@ From source:
 You build Finder Menu yourself from this source, so there's no downloaded app to trust. Everything below can be checked in the code:
 
 - **No network access.** There's no networking code, so nothing is sent anywhere: no telemetry, no analytics, no update checks.
-- **Small enough to read.** About 900 lines of Swift and 170 lines of shell scripts (`install.sh`, `uninstall.sh` and `scripts/`). Read them before you run them.
+- **Small enough to read.** About 900 lines of Swift and 185 lines of shell scripts (`install.sh`, `uninstall.sh` and `scripts/`). Read them before you run them.
 - **Sandboxed Finder extension.** It can't read your files. It only gets the folder you right-click, the items you select and the list of mounted drives, plus read-only access to Finder Menu's own settings (which items to show and where, plus any New File templates).
 - **The helper only acts when you pick a menu item.** It creates an empty file with the name you type or a template name you saved (never overwriting anything), opens a terminal or an app in a folder, or moves the Finder window up a level.
 - **Links from other apps are ignored.** The extension sends actions to the helper as `findermenu://` links. Other apps can send those links too, and so can a website after your browser asks you. Opening a folder they choose in a terminal or IDE could run code from it, so the helper checks the code signature of whatever sent each link and ignores any that didn't come from its own Finder extension. On top of that, it only acts on folders that exist, only opens apps from its built-in IDE list (or one you pick yourself), asks before a custom New File, and for templates only uses a file name you already saved (never taken from the URL).
@@ -194,9 +195,9 @@ Found a security problem? Please report it privately, as described in [SECURITY.
 
 ## Contributing
 
-Bug reports and pull requests are welcome.
+Bug reports and pull requests are welcome. Run `scripts/test.sh` before opening one.
 
-- **Translations:** copy `Resources/en.lproj` to `Resources/<code>.lproj`, translate the text in it, add the code to `CFBundleLocalizations` in both `Resources/*-Info.plist` files, and open a pull request.
+- **Translations:** copy `Resources/en.lproj` to `Resources/<code>.lproj`, translate the text in it, add the code to `CFBundleLocalizations` in both `Resources/*-Info.plist` files, and open a pull request. `scripts/test.sh` tells you if a key, a `%@` or the language code is missing.
 - **README pictures:** they're mockups, not screenshots. Edit `docs/mockups/mockups.html`, then run `swift scripts/make-mockups.swift`.
 
 ## License
