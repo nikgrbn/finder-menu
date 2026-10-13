@@ -23,7 +23,8 @@ final class SettingsWindowController: NSWindowController {
         icon.heightAnchor.constraint(equalToConstant: 56).isActive = true
         let name = NSTextField(labelWithString: "Finder Menu")
         name.font = .boldSystemFont(ofSize: 15)
-        let version = NSTextField(labelWithString: "Version " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"))
+        let versionNumber = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let version = NSTextField(labelWithString: String(format: NSLocalizedString("Version %@", comment: ""), versionNumber))
         version.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         version.textColor = .secondaryLabelColor
         let titles = NSStackView(views: [name, version])

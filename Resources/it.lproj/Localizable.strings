@@ -35,6 +35,7 @@
 
 /* Settings Window */
 "Finder Menu Settings" = "Impostazioni di Finder Menu";
+"Version %@" = "Versione %@";
 "Show in the right-click menu" = "Mostra nel menu contestuale";
 "Also on external and network drives" = "Anche sulle unità esterne e di rete";
 "Show icons" = "Mostra icone";

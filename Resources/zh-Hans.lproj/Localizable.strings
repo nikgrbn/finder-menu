@@ -35,6 +35,7 @@
 
 /* Settings Window */
 "Finder Menu Settings" = "Finder Menu 设置";
+"Version %@" = "版本 %@";
 "Show in the right-click menu" = "在右键菜单中显示";
 "Also on external and network drives" = "在外置磁盘和网络驱动器上也显示";
 "Show icons" = "显示图标";

@@ -35,6 +35,7 @@
 
 /* Settings Window */
 "Finder Menu Settings" = "Finder Menu Settings";
+"Version %@" = "Version %@";
 "Show in the right-click menu" = "Show in the right-click menu";
 "Also on external and network drives" = "Also on external and network drives";
 "Show icons" = "Show icons";
