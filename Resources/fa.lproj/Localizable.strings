@@ -1,0 +1,50 @@
+/* Menu Items */
+"New File…" = "فایل جدید…";
+"Open Terminal Here" = "باز کردن Terminal در اینجا";
+"Open Folder With" = "باز کردن پوشه با";
+"Copy Path" = "کپی مسیر";
+"Go to Parent Folder" = "رفتن به پوشه والد";
+"Other App…" = "برنامه دیگر…";
+
+/* New File Dialog */
+"New File" = "فایل جدید";
+"In: %@" = "در: %@";
+"⚠️ That isn't a valid file name." = "⚠️ این نام فایل معتبر نیست.";
+"⚠️ \"%@\" already exists." = "⚠️ \"%@\" از قبل وجود دارد.";
+"⚠️ Couldn't create the file here (no permission?)." = "⚠️ امکان ایجاد فایل در اینجا وجود نداشت (بدون مجوز؟).";
+"Create" = "ایجاد";
+"Cancel" = "لغو";
+"Save as template" = "ذخیره به‌عنوان الگو";
+"Manage Templates…" = "مدیریت الگوها…";
+
+/* Open Folder With Dialog */
+"Open “%@” with:" = "باز کردن «%@» با:";
+"Open" = "باز کردن";
+
+/* Main Menu */
+"Quit Finder Menu" = "خروج از Finder Menu";
+"Edit" = "ویرایش";
+"Undo" = "واگرد";
+"Redo" = "بازگرد";
+"Cut" = "برش";
+"Copy" = "کپی";
+"Paste" = "جای‌گذاری";
+"Select All" = "انتخاب همه";
+"Window" = "پنجره";
+"Close" = "بستن";
+
+/* Settings Window */
+"Finder Menu Settings" = "تنظیمات Finder Menu";
+"Version %@" = "نسخه %@";
+"Show in the right-click menu" = "نمایش در منوی راست‌کلیک";
+"Also on external and network drives" = "همچنین در درایوهای خارجی و شبکه";
+"Show icons" = "نمایش آیکون‌ها";
+"Open Terminal Here uses" = "«باز کردن Terminal در اینجا» استفاده می‌کند از";
+"Automatic (%@)" = "خودکار (%@)";
+"Changes apply the next time you right-click in Finder." = "تغییرات با راست‌کلیک بعدی در Finder اعمال می‌شود.";
+"Choose the app for Open Terminal Here:" = "انتخاب برنامه برای «باز کردن Terminal در اینجا»:";
+"Choose" = "انتخاب";
+"New File templates" = "الگوهای فایل جدید";
+"No templates yet." = "هنوز الگویی وجود ندارد.";
+"Remove" = "حذف";
+"Remove All" = "حذف همه";
