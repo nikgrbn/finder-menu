@@ -22,6 +22,7 @@
 "Open" = "打开";
 
 /* Main Menu */
+"About Finder Menu" = "关于 Finder Menu";
 "Quit Finder Menu" = "退出 Finder Menu";
 "Edit" = "编辑";
 "Undo" = "撤销";

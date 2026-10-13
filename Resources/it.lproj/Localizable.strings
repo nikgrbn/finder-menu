@@ -22,6 +22,7 @@
 "Open" = "Apri";
 
 /* Main Menu */
+"About Finder Menu" = "Informazioni su Finder Menu";
 "Quit Finder Menu" = "Esci da Finder Menu";
 "Edit" = "Modifica";
 "Undo" = "Annulla";

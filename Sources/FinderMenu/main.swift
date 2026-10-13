@@ -81,6 +81,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func makeMainMenu() -> NSMenu {
         let appMenu = NSMenu()
+        appMenu.addItem(withTitle: NSLocalizedString("About Finder Menu", comment: ""), action: #selector(showAbout(_:)), keyEquivalent: "").target = self
+        appMenu.addItem(.separator())
         appMenu.addItem(withTitle: NSLocalizedString("Quit Finder Menu", comment: ""), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let editMenu = NSMenu(title: NSLocalizedString("Edit", comment: ""))
         editMenu.addItem(withTitle: NSLocalizedString("Undo", comment: ""), action: Selector(("undo:")), keyEquivalent: "z")
@@ -99,6 +101,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             main.addItem(item)
         }
         return main
+    }
+
+    // The standard About panel, with a link to the project under the version.
+    @objc private func showAbout(_ sender: Any?) {
+        let centered = NSMutableParagraphStyle()
+        centered.alignment = .center
+        let link = NSAttributedString(string: repositoryName, attributes: [
+            .link: repositoryURL, .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize), .paragraphStyle: centered,
+        ])
+        NSApp.orderFrontStandardAboutPanel(options: [.credits: link])
     }
 
     // A menu action is done. Quit, unless the settings window is open.

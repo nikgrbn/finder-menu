@@ -22,6 +22,7 @@
 "Open" = "Открыть";
 
 /* Main Menu */
+"About Finder Menu" = "О программе Finder Menu";
 "Quit Finder Menu" = "Завершить Finder Menu";
 "Edit" = "Правка";
 "Undo" = "Отменить";

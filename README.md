@@ -126,10 +126,12 @@ Open **Finder Menu** from Spotlight or your Applications folder, or run `finder-
 - pick the terminal for **Open Terminal Here**. Automatic uses the first one installed, in this order: iTerm2, Ghostty, Warp, WezTerm, kitty, Alacritty, Terminal. **Other App…** lets you pick any app.
 - remove [New File templates](#new-file-templates)
 
+It also shows the version you have and links to this page. **About Finder Menu** in the app menu shows the same.
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
-    <img src="docs/images/settings-light.png" width="380" alt="Finder Menu settings window: a checkbox for each right-click menu item, one for external and network drives and one for icons, a picker for the terminal Open Terminal Here uses, and the saved New File templates, each with a Remove button">
+    <img src="docs/images/settings-light.png" width="380" alt="Finder Menu settings window: the app's version and a link to its GitHub repository, a checkbox for each right-click menu item, one for external and network drives and one for icons, a picker for the terminal Open Terminal Here uses, and the saved New File templates, each with a Remove button">
   </picture>
 </p>
 
@@ -172,6 +174,7 @@ From source:
 ## Troubleshooting
 
 - **Menu items don't appear:** hold ⌥, right-click Finder in the Dock and choose **Relaunch**. Also check that **Finder Menu** is turned on under System Settings → General → Login Items & Extensions → Finder extensions.
+- **Menu items don't appear in OneDrive, Dropbox, Google Drive or iCloud Drive folders:** a macOS limitation. These apps sync through Apple's File Provider, and Finder doesn't show other apps' Finder extension menus in their folders, so other right-click menu apps are missing there too. [#29](https://github.com/nikgrbn/finder-menu/issues/29) has the details, and ideas for a way around it are welcome there.
 - **Asked for permission again after reinstalling:** expected. Every build is signed locally with a new signature, so macOS asks again.
 - **A drive shows the Finder Menu icon in Finder's sidebar:** expected. Finder gives every drive a Finder extension works on that app's icon, except the startup disk, so the menu can't appear on a drive without it. It's only the icon. If it bothers you, untick **Also on external and network drives** in [settings](#settings), which also takes the menu off those drives. [#14](https://github.com/nikgrbn/finder-menu/issues/14) has the details, and ideas for a way around it are welcome there.
 

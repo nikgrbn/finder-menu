@@ -21,6 +21,7 @@
     --text: rgba(0, 0, 0, .85);
     --text-2: rgba(0, 0, 0, .5);
     --text-3: rgba(0, 0, 0, .26);
+    --link: #0068da;
     --window: #fff;
     --edge: rgba(0, 0, 0, .16);
     --rim: transparent;
@@ -42,6 +43,7 @@
     --text: rgba(255, 255, 255, .88);
     --text-2: rgba(255, 255, 255, .55);
     --text-3: rgba(255, 255, 255, .28);
+    --link: #419cff;
     --window: #202020;
     --edge: rgba(0, 0, 0, .75);
     --rim: rgba(255, 255, 255, .14);
@@ -147,6 +149,7 @@
   .header img { width: 56px; height: 56px; }
   .header .name { font-size: 15px; line-height: 19px; font-weight: 700; }
   .header .version { margin-top: 2px; font-size: 11px; line-height: 14px; color: var(--text-2); }
+  .header .link { margin-top: 2px; font-size: 11px; line-height: 14px; color: var(--link); }
   .section { font-weight: 700; }
   .checkbox { display: flex; align-items: center; gap: 7px; height: 16px; }
   .checkbox .box {
@@ -363,7 +366,8 @@ const scenes = {
         h('div', { cls: 'titlebar' }, lights('closable-only'), 'Finder Menu Settings'),
         h('div', { cls: 'content' },
           h('div', { cls: 'header' }, h('img', { src: '../icon.png', alt: '' }),
-            h('div', null, h('div', { cls: 'name' }, 'Finder Menu'), h('div', { cls: 'version' }, 'Version 1.4.0'))),
+            h('div', null, h('div', { cls: 'name' }, 'Finder Menu'), h('div', { cls: 'version' }, 'Version 1.4.0'),
+              h('div', { cls: 'link' }, 'github.com/nikgrbn/finder-menu'))),
           gap(20), h('div', { cls: 'section' }, 'Show in the right-click menu'), gap(10),
           ['New File…', 'Open Terminal Here', 'Open Folder With', 'Copy Path', 'Go to Parent Folder']
             .flatMap((title, i) => [i ? gap(8) : null, checkbox(title)]),

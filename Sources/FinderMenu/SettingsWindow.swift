@@ -1,6 +1,10 @@
 import Cocoa
 import UniformTypeIdentifiers
 
+// Where to read the docs, report a bug or see the source. Linked from settings and the About panel.
+let repositoryURL = URL(string: "https://github.com/nikgrbn/finder-menu")!
+let repositoryName = "github.com/nikgrbn/finder-menu"
+
 // Shown when Finder Menu.app is opened directly (Spotlight, Finder, `finder-menu settings`).
 // Every change is saved right away and applies on the next right-click.
 final class SettingsWindowController: NSWindowController {
@@ -27,7 +31,8 @@ final class SettingsWindowController: NSWindowController {
         let version = NSTextField(labelWithString: String(format: NSLocalizedString("Version %@", comment: ""), versionNumber))
         version.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         version.textColor = .secondaryLabelColor
-        let titles = NSStackView(views: [name, version])
+        let link = LinkButton(title: repositoryName, url: repositoryURL)
+        let titles = NSStackView(views: [name, version, link])
         titles.orientation = .vertical
         titles.alignment = .leading
         titles.spacing = 2
@@ -244,5 +249,35 @@ final class SettingsWindowController: NSWindowController {
             return
         }
         chosenTerminal = item.representedObject as? String
+    }
+}
+
+// Text that looks and acts like a web link: link color, a pointing hand, opens in the default browser.
+private final class LinkButton: NSButton {
+    private var url: URL!
+
+    convenience init(title: String, url: URL) {
+        self.init(frame: .zero)
+        self.url = url
+        isBordered = false
+        attributedTitle = NSAttributedString(string: title, attributes: [
+            .foregroundColor: NSColor.linkColor, .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+        ])
+        toolTip = url.absoluteString
+        target = self
+        action = #selector(openLink(_:))
+    }
+
+    // Labels line up by their text, 2 points in from their frame. Do the same, so the link lines up with them.
+    override var alignmentRectInsets: NSEdgeInsets {
+        NSEdgeInsets(top: 0, left: 2, bottom: 0, right: 2)
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .pointingHand)
+    }
+
+    @objc private func openLink(_ sender: Any?) {
+        NSWorkspace.shared.open(url)
     }
 }
