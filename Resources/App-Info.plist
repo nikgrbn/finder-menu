@@ -41,6 +41,7 @@
 		<string>it</string>
 		<string>uk</string>
 		<string>es</string>
+		<string>zh-Hans</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>

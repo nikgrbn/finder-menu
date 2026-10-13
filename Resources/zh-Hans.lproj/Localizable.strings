@@ -1,0 +1,49 @@
+/* Menu Items */
+"New File…" = "新建文件…";
+"Open Terminal Here" = "在此处打开终端";
+"Open Folder With" = "用以下应用打开";
+"Copy Path" = "拷贝路径";
+"Go to Parent Folder" = "前往上层文件夹";
+"Other App…" = "其他应用…";
+
+/* New File Dialog */
+"New File" = "新建文件";
+"In: %@" = "位置：%@";
+"⚠️ That isn't a valid file name." = "⚠️ 这不是有效的文件名。";
+"⚠️ \"%@\" already exists." = "⚠️ “%@”已存在。";
+"⚠️ Couldn't create the file here (no permission?)." = "⚠️ 无法在此处创建文件（可能没有权限）。";
+"Create" = "创建";
+"Cancel" = "取消";
+"Save as template" = "存为模板";
+"Manage Templates…" = "管理模板…";
+
+/* Open Folder With Dialog */
+"Open “%@” with:" = "用以下应用打开“%@”：";
+"Open" = "打开";
+
+/* Main Menu */
+"Quit Finder Menu" = "退出 Finder Menu";
+"Edit" = "编辑";
+"Undo" = "撤销";
+"Redo" = "重做";
+"Cut" = "剪切";
+"Copy" = "拷贝";
+"Paste" = "粘贴";
+"Select All" = "全选";
+"Window" = "窗口";
+"Close" = "关闭";
+
+/* Settings Window */
+"Finder Menu Settings" = "Finder Menu 设置";
+"Show in the right-click menu" = "在右键菜单中显示";
+"Also on external and network drives" = "在外置磁盘和网络驱动器上也显示";
+"Show icons" = "显示图标";
+"Open Terminal Here uses" = "“在此处打开终端”使用";
+"Automatic (%@)" = "自动（%@）";
+"Changes apply the next time you right-click in Finder." = "更改将在下次于访达中右键时生效。";
+"Choose the app for Open Terminal Here:" = "选择“在此处打开终端”使用的应用：";
+"Choose" = "选择";
+"New File templates" = "“新建文件”模板";
+"No templates yet." = "暂无模板。";
+"Remove" = "移除";
+"Remove All" = "全部移除";
