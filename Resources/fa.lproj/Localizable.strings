@@ -8,9 +8,9 @@
 
 /* New File Dialog */
 "New File" = "فایل جدید";
-"In: %@" = "در: %@";
+"In: %@" = "در: \U2068%@\U2069";
 "⚠️ That isn't a valid file name." = "⚠️ این نام فایل معتبر نیست.";
-"⚠️ \"%@\" already exists." = "⚠️ \"%@\" از قبل وجود دارد.";
+"⚠️ \"%@\" already exists." = "⚠️ \U2068\"%@\"\U2069 از قبل وجود دارد.";
 "⚠️ Couldn't create the file here (no permission?)." = "⚠️ امکان ایجاد فایل در اینجا وجود نداشت (بدون مجوز؟).";
 "Create" = "ایجاد";
 "Cancel" = "لغو";
@@ -22,6 +22,7 @@
 "Open" = "باز کردن";
 
 /* Main Menu */
+"About Finder Menu" = "درباره Finder Menu";
 "Quit Finder Menu" = "خروج از Finder Menu";
 "Edit" = "ویرایش";
 "Undo" = "واگرد";
