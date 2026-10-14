@@ -181,6 +181,9 @@
   }
   .field .caret { width: 1px; height: 15px; margin-left: 1px; background: var(--text); }
   .alert .checkbox { margin-top: 14px; }
+  .alert .from { margin-top: 6px; font-size: 11px; line-height: 14px; color: var(--text-2); }
+  .alert .template-line { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 16px; }
+  .alert .template-line .checkbox { margin-top: 0; }
   .buttons { display: flex; gap: 10px; margin-top: 20px; }
   .buttons > div {
     flex: 1; display: flex; align-items: center; justify-content: center;
@@ -328,12 +331,15 @@ const scenes = {
 
   // Save as template in the New File dialog, then the New File submenu it adds.
   templates() {
-    const dialog = h('div', { cls: 'window alert', style: at(0, 0, 360) },
+    const dialog = h('div', { cls: 'window alert', style: at(0, 0, 520) },
       h('img', { src: '../icon.png', alt: '' }),
       h('div', { cls: 'title' }, 'New File'),
       h('div', { cls: 'info' }, 'In: ~/Projects/my-app'),
       h('div', { cls: 'field' }, 'notes.md', h('span', { cls: 'caret' })),
-      checkbox('Save as template'),
+      h('div', { cls: 'from' }, 'From: ~/Documents/notes.md'),
+      h('div', { cls: 'template-line' },
+        checkbox('Save as template'),
+        h('div', { cls: 'button' }, 'Use File as Template…')),
       h('div', { cls: 'buttons' }, h('div', null, 'Cancel'), h('div', { cls: 'default' }, 'Create')));
     const then = h('div', { cls: 'then' }, sym('arrow.right', 22, 'semibold'));
     const main = menu(ours(true, false));
@@ -350,9 +356,10 @@ const scenes = {
       layout() {
         // The menus sit level with the middle of the dialog, past an arrow.
         const middle = dialog.offsetHeight / 2;
-        then.style.left = '384px';
+        const past = dialog.offsetWidth;
+        then.style.left = past + 24 + 'px';
         then.style.top = middle - 11 + 'px';
-        main.style.left = '432px';
+        main.style.left = past + 72 + 'px';
         main.style.top = middle - sub.offsetHeight / 2 + 'px';
         attach(main, sub);
         pointAt(sub, arrow);

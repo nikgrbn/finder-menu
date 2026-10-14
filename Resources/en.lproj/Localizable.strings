@@ -47,5 +47,13 @@
 "Choose" = "Choose";
 "New File templates" = "New File templates";
 "No templates yet." = "No templates yet.";
+"Use File as Template…" = "Use File as Template…";
+"Use as Template…" = "Use as Template…";
+"Choose a file to use as a template:" = "Choose a file to use as a template:";
+"From: %@" = "From: %@";
+"\"%@\" is already a template." = "\"%@\" is already a template.";
+"Replace the saved template with this file?" = "Replace the saved template with this file?";
+"Replace" = "Replace";
+"Couldn't add \"%@\" as a template." = "Couldn't add \"%@\" as a template.";
 "Remove" = "Remove";
 "Remove All" = "Remove All";

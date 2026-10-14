@@ -128,16 +128,19 @@ final class SettingsWindowController: NSWindowController {
             for template in templates {
                 templatesStack.addArrangedSubview(templateRow(template))
             }
-            if templates.count > 1 {
-                let removeAll = smallButton(NSLocalizedString("Remove All", comment: ""), action: #selector(removeAllTemplates(_:)))
-                let row = NSStackView(views: [NSView(), removeAll])
-                row.orientation = .horizontal
-                row.alignment = .centerY
-                row.distribution = .fill
-                // A little apart from the rows, so it doesn't read as another template.
-                templatesStack.setCustomSpacing(12, after: templatesStack.arrangedSubviews.last!)
-                templatesStack.addArrangedSubview(row)
+        }
+        if templates.count > 1 {
+            if let last = templatesStack.arrangedSubviews.last {
+                templatesStack.setCustomSpacing(12, after: last)
             }
+            let removeAll = smallButton(NSLocalizedString("Remove All", comment: ""), action: #selector(removeAllTemplates(_:)))
+            let spacer = NSView()
+            spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            let row = NSStackView(views: [spacer, removeAll])
+            row.orientation = .horizontal
+            row.alignment = .centerY
+            row.distribution = .fill
+            templatesStack.addArrangedSubview(row)
         }
         resizeToFit()
     }
@@ -185,7 +188,7 @@ final class SettingsWindowController: NSWindowController {
     }
 
     @objc private func removeAllTemplates(_ sender: Any?) {
-        fileTemplates = []
+        removeAllFileTemplates()
         reloadTemplates()
     }
 

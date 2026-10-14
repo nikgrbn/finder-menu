@@ -47,5 +47,13 @@
 "Choose" = "Seleccionar";
 "New File templates" = "Plantillas de archivos nuevos";
 "No templates yet." = "Todavía no hay plantillas.";
+"Use File as Template…" = "Usar archivo como plantilla…";
+"Use as Template…" = "Usar como plantilla…";
+"Choose a file to use as a template:" = "Elige un archivo para usar como plantilla:";
+"From: %@" = "Desde: %@";
+"\"%@\" is already a template." = "\"%@\" ya es una plantilla.";
+"Replace the saved template with this file?" = "¿Reemplazar la plantilla guardada por este archivo?";
+"Replace" = "Reemplazar";
+"Couldn't add \"%@\" as a template." = "No se pudo añadir \"%@\" como plantilla.";
 "Remove" = "Eliminar";
 "Remove All" = "Eliminar todo";

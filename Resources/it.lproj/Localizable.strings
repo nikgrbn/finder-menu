@@ -47,5 +47,13 @@
 "Choose" = "Scegli";
 "New File templates" = "Modelli di “Nuovo file”";
 "No templates yet." = "Nessun modello ancora.";
+"Use File as Template…" = "Usa file come modello…";
+"Use as Template…" = "Usa come modello…";
+"Choose a file to use as a template:" = "Scegli un file da usare come modello:";
+"From: %@" = "Da: %@";
+"\"%@\" is already a template." = "“%@” è già un modello.";
+"Replace the saved template with this file?" = "Sostituire il modello salvato con questo file?";
+"Replace" = "Sostituisci";
+"Couldn't add \"%@\" as a template." = "Impossibile aggiungere “%@” come modello.";
 "Remove" = "Rimuovi";
 "Remove All" = "Rimuovi tutti";

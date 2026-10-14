@@ -54,8 +54,21 @@ class FinderMenuSync: FIFinderSync {
             }
             entry.image = Self.symbol(item.symbol)
             menu.addItem(entry)
+            // Right-click a single file: offer to turn it into a New File template without the file picker.
+            if item.id == "new-file", menuKind == .contextualMenuForItems, selectedTemplateSource != nil {
+                let use = NSMenuItem(title: NSLocalizedString("Use as Template…", comment: ""),
+                                     action: #selector(useAsTemplate(_:)), keyEquivalent: "")
+                use.image = Self.symbol("square.and.arrow.down")
+                menu.addItem(use)
+            }
         }
         return menu.items.isEmpty ? nil : menu
+    }
+
+    // One selected file or package (not an ordinary folder). Used for Use as Template….
+    private var selectedTemplateSource: URL? {
+        guard selection.count == 1, let url = selection.first else { return nil }
+        return templateSourceFile(at: url)
     }
 
     // Finder drops the template flag when it copies the menu, so SF Symbols would always render
@@ -110,8 +123,9 @@ class FinderMenuSync: FIFinderSync {
         return sub
     }
 
-    // New File… (the name dialog, with Save as template) comes first; below it, templates are
-    // one-click items, and Manage Templates… opens the settings window, where they can be removed.
+    // New File… (the name dialog, with Save as template and Use File as Template…) comes first;
+    // below it, templates are one-click items, and Manage Templates… opens the settings window,
+    // where they can be removed.
     static func newFileMenu(_ templates: [FileTemplate]) -> NSMenu {
         let sub = NSMenu(title: "")
         sub.addItem(withTitle: NSLocalizedString("New File…", comment: ""), action: #selector(FinderMenuSync.newFile(_:)), keyEquivalent: "")
@@ -152,6 +166,11 @@ class FinderMenuSync: FIFinderSync {
     @objc func newFile(_ sender: AnyObject?) {
         guard let dir = currentFolder else { return }
         callHelper("newfile", dir.path)
+    }
+
+    @objc func useAsTemplate(_ sender: AnyObject?) {
+        guard let file = selectedTemplateSource else { return }
+        callHelper("usetemplate", file.path)
     }
 
     // Finder copies the menu, so find the template by the item's title (file names are unique).

@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var handledURL = false
     private var settingsWindow: SettingsWindowController?
+    // Kept while the New File alert is open, so Use File as Template… can fill the name field.
+    private var newFileDialogState: NewFileDialogState?
 
     func application(_ application: NSApplication, open urls: [URL]) {
         handledURL = true
@@ -20,6 +22,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let c = URLComponents(url: url, resolvingAgainstBaseURL: false) else { continue }
             // Manage Templates… doesn't act on a folder.
             if c.host == "settings" { showSettings(); continue }
+            // Use as Template… passes a file path, not a folder.
+            if c.host == "usetemplate" {
+                guard let path = c.queryItems?.first(where: { $0.name == "path" })?.value,
+                      let source = templateSourceFile(atPath: path) else { continue }
+                newFile(in: source.deletingLastPathComponent().path, fromSource: source)
+                continue
+            }
             guard let path = c.queryItems?.first(where: { $0.name == "path" })?.value,
                   let dir = folder(for: path) else { continue }
             switch c.host {
@@ -216,15 +225,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         createFile(in: dir, suggested: "untitled.txt", ask: true)
     }
 
-    // One click from the New File submenu: use the template's name, and if that name is taken,
-    // pick the next free name the way Finder does (notes.md → notes 2.md).
-    private func newFile(in dir: String, from template: FileTemplate) {
-        createFile(in: dir, suggested: unusedFilename(template.filename, in: dir), ask: false)
+    // Right-click Use as Template…: same dialog as Use File as Template…, with the file already chosen.
+    private func newFile(in dir: String, fromSource source: URL) {
+        createFile(in: dir, suggested: source.lastPathComponent, ask: true, saveAsTemplate: true, source: source)
     }
 
-    private func createFile(in dir: String, suggested: String, ask: Bool) {
+    // One click from the New File submenu: copy the stored file. If there is no copy (an old
+    // name-only template), create an empty file. If the name is taken, pick the next free name
+    // the way Finder does (notes.md → notes 2.md).
+    private func newFile(in dir: String, from template: FileTemplate) {
+        guard isValidFilename(template.filename) else { return }
+        for _ in 0..<50 {
+            let name = unusedFilename(template.filename, in: dir)
+            let dest = URL(fileURLWithPath: (dir as NSString).appendingPathComponent(name))
+            do {
+                if let stored = storedTemplateFile(template) {
+                    try FileManager.default.copyItem(at: stored, to: dest)
+                    stripQuarantine(at: dest)
+                } else {
+                    try Data().write(to: dest, options: .withoutOverwriting)
+                }
+                NSWorkspace.shared.activateFileViewerSelecting([dest])
+                return
+            } catch let error as CocoaError where error.code == .fileWriteFileExists {
+                continue
+            } catch {
+                NSLog("Finder Menu couldn't create a file from a template: \(error)")
+                let alert = NSAlert()
+                alert.messageText = NSLocalizedString("New File", comment: "")
+                alert.informativeText = NSLocalizedString("⚠️ Couldn't create the file here (no permission?).", comment: "")
+                alert.runModal()
+                return
+            }
+        }
+    }
+
+    private func createFile(in dir: String, suggested: String, ask: Bool,
+                            saveAsTemplate: Bool = false, source: URL? = nil) {
         var name = suggested
-        var saveAsTemplate = false
+        var saveAsTemplate = saveAsTemplate
+        var source = source
         var problem: String?
         while true {
             if ask || problem != nil {
@@ -232,20 +272,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let inString = String(format: inFormat, (dir as NSString).abbreviatingWithTildeInPath)
                 let info = (problem.map { $0 + "\n\n" } ?? "") + inString
                 guard let options = askFileName(info: info, suggested: name,
-                                                saveAsTemplate: saveAsTemplate) else { return }
+                                                saveAsTemplate: saveAsTemplate, source: source) else { return }
                 name = options.name.trimmingCharacters(in: .whitespacesAndNewlines)
                 saveAsTemplate = options.saveAsTemplate
+                source = options.source
             }
-            let full = (dir as NSString).appendingPathComponent(name)
+            let dest = URL(fileURLWithPath: (dir as NSString).appendingPathComponent(name))
             if !isValidFilename(name) {
                 problem = NSLocalizedString("⚠️ That isn't a valid file name.", comment: "")
                 continue
             }
+            // Picking a file that already sits in this folder (same path) isn't a conflict: only
+            // the template store needs a copy. Creating a second file would fail with "already exists".
+            let sourceFile = source?.resolvingSymlinksInPath().standardizedFileURL
+            let creatingInPlace = sourceFile == dest.resolvingSymlinksInPath().standardizedFileURL
             do {
-                // A separate existence check cannot prevent another process from creating the same path.
-                try Data().write(to: URL(fileURLWithPath: full), options: .withoutOverwriting)
-                if saveAsTemplate { saveFileTemplate(filename: name) }
-                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: full)])
+                if let source, !creatingInPlace {
+                    // A separate existence check cannot prevent another process from creating the same path.
+                    try FileManager.default.copyItem(at: source, to: dest)
+                    stripQuarantine(at: dest)
+                } else if source == nil {
+                    try Data().write(to: dest, options: .withoutOverwriting)
+                }
+                if saveAsTemplate {
+                    if let source {
+                        saveFileTemplate(copying: source, as: name)
+                    } else {
+                        saveFileTemplate(filename: name)
+                    }
+                    settingsWindow?.reloadTemplates()
+                }
+                NSWorkspace.shared.activateFileViewerSelecting([dest])
                 return
             } catch let error as CocoaError where error.code == .fileWriteFileExists {
                 let existsFormat = NSLocalizedString("⚠️ \"%@\" already exists.", comment: "")
@@ -259,9 +316,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private struct NewFileOptions {
         var name: String
         var saveAsTemplate: Bool
+        var source: URL?
     }
 
-    private func askFileName(info: String, suggested: String, saveAsTemplate: Bool) -> NewFileOptions? {
+    // Holds the controls the "Use File as Template…" button updates while the alert is modal.
+    private final class NewFileDialogState: NSObject {
+        var source: URL?
+        weak var nameField: NSTextField?
+        weak var sourceLabel: NSTextField?
+        weak var saveBox: NSButton?
+        weak var stack: NSStackView?
+        weak var alert: NSAlert?
+
+        @objc func pickSource(_ sender: Any?) {
+            guard let url = pickTemplateSourceFile() else { return }
+            source = url
+            nameField?.stringValue = url.lastPathComponent
+            let fromFormat = NSLocalizedString("From: %@", comment: "")
+            sourceLabel?.stringValue = String(format: fromFormat, (url.path as NSString).abbreviatingWithTildeInPath)
+            sourceLabel?.isHidden = false
+            saveBox?.state = .on
+            guard let stack, let alert else { return }
+            stack.frame = NSRect(origin: .zero, size: stack.fittingSize)
+            alert.accessoryView = stack
+            alert.window.layoutIfNeeded()
+        }
+    }
+
+    private func askFileName(info: String, suggested: String, saveAsTemplate: Bool, source: URL?) -> NewFileOptions? {
         let alert = NSAlert()
         alert.messageText = NSLocalizedString("New File", comment: "")
         alert.informativeText = info
@@ -272,27 +354,109 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         field.stringValue = suggested
         field.placeholderString = "name.ext"
         field.translatesAutoresizingMaskIntoConstraints = false
-        field.widthAnchor.constraint(equalToConstant: 320).isActive = true
         field.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+        let sourceLabel = NSTextField(labelWithString: "")
+        sourceLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        sourceLabel.textColor = .secondaryLabelColor
+        sourceLabel.lineBreakMode = .byTruncatingMiddle
+        sourceLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        if let source {
+            let fromFormat = NSLocalizedString("From: %@", comment: "")
+            sourceLabel.stringValue = String(format: fromFormat, (source.path as NSString).abbreviatingWithTildeInPath)
+        } else {
+            sourceLabel.isHidden = true
+        }
 
         let saveBox = NSButton(checkboxWithTitle: NSLocalizedString("Save as template", comment: ""), target: nil, action: nil)
         saveBox.state = saveAsTemplate ? .on : .off
 
-        let stack = NSStackView(views: [field, saveBox])
+        let state = NewFileDialogState()
+        state.source = source
+        state.nameField = field
+        state.sourceLabel = sourceLabel
+        state.saveBox = saveBox
+        state.alert = alert
+
+        let addButton = NSButton(title: NSLocalizedString("Use File as Template…", comment: ""),
+                                 target: state, action: #selector(NewFileDialogState.pickSource(_:)))
+        addButton.controlSize = .small
+        addButton.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        addButton.setContentHuggingPriority(.required, for: .horizontal)
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let row = NSStackView(views: [saveBox, spacer, addButton])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        let width = max(320, saveBox.fittingSize.width + addButton.fittingSize.width + 12)
+        field.widthAnchor.constraint(equalToConstant: width).isActive = true
+        sourceLabel.widthAnchor.constraint(equalToConstant: width).isActive = true
+        row.widthAnchor.constraint(equalToConstant: width).isActive = true
+
+        let stack = NSStackView(views: [field, sourceLabel, row])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 8
-        stack.setCustomSpacing(12, after: field)
+        stack.setCustomSpacing(6, after: field)
+        stack.setCustomSpacing(12, after: sourceLabel)
         stack.frame = NSRect(origin: .zero, size: stack.fittingSize)
+        state.stack = stack
+        newFileDialogState = state
         alert.accessoryView = stack
         alert.window.initialFirstResponder = field
 
         // The Finder extension can't hand focus to the helper, and macOS refuses to bring forward an app
         // with no windows on screen. So ask once the alert is showing, or typing still goes to Finder.
         RunLoop.main.perform(inModes: [.modalPanel]) { NSApp.activate(ignoringOtherApps: true) }
+        defer { newFileDialogState = nil }
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
-        return NewFileOptions(name: field.stringValue, saveAsTemplate: saveBox.state == .on)
+        return NewFileOptions(name: field.stringValue, saveAsTemplate: saveBox.state == .on, source: state.source)
     }
+}
+
+// Opens a panel for Use File as Template…. Only picks a file; Create stores the copy under the typed name.
+private func pickTemplateSourceFile() -> URL? {
+    let panel = NSOpenPanel()
+    panel.message = NSLocalizedString("Choose a file to use as a template:", comment: "")
+    panel.prompt = NSLocalizedString("Choose", comment: "")
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.treatsFilePackagesAsDirectories = false
+    panel.resolvesAliases = true
+    RunLoop.main.perform(inModes: [.modalPanel]) { NSApp.activate(ignoringOtherApps: true) }
+    guard panel.runModal() == .OK, let url = panel.url else { return nil }
+    return url
+}
+
+// Stores a template copy, asking before replacing a template that already uses this name.
+private func saveFileTemplate(copying source: URL, as filename: String) {
+    do {
+        try addFileTemplate(copying: source, as: filename, replace: false)
+    } catch TemplateFileError.duplicate(let name) {
+        let alert = NSAlert()
+        alert.messageText = String(format: NSLocalizedString("\"%@\" is already a template.", comment: ""), name)
+        alert.informativeText = NSLocalizedString("Replace the saved template with this file?", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Replace", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        do {
+            try addFileTemplate(copying: source, as: filename, replace: true)
+        } catch {
+            NSLog("Finder Menu couldn't replace a template: \(error)")
+            reportTemplateAddFailure(filename)
+        }
+    } catch {
+        NSLog("Finder Menu couldn't add a template: \(error)")
+        reportTemplateAddFailure(filename)
+    }
+}
+
+private func reportTemplateAddFailure(_ name: String) {
+    let alert = NSAlert()
+    alert.messageText = String(format: NSLocalizedString("Couldn't add \"%@\" as a template.", comment: ""), name)
+    alert.runModal()
 }
 
 let app = NSApplication.shared

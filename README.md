@@ -56,13 +56,13 @@ Right-click **empty space** in any folder, with nothing selected:
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Menu item | What it does |
 |:-:|---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/new-file-dark.png"><img src="docs/icons/new-file.png" width="20" height="20" alt=""></picture> | **New&nbsp;File…** | Asks for a name with any extension (`notes.md`, `main.py`, `.env`), creates it in the current folder and selects it. Never overwrites. Names you use often can be [saved as templates](#new-file-templates). |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/new-file-dark.png"><img src="docs/icons/new-file.png" width="20" height="20" alt=""></picture> | **New&nbsp;File…** | Asks for a name with any extension (`notes.md`, `main.py`, `.env`), creates it in the current folder and selects it. Never overwrites. A name you use often, or a file you already have, can be [saved as a template](#new-file-templates). |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/terminal-dark.png"><img src="docs/icons/terminal.png" width="20" height="20" alt=""></picture> | **Open&nbsp;Terminal&nbsp;Here** | Opens a terminal in the current folder: iTerm2, Ghostty, Warp, WezTerm, kitty or Alacritty if you have one, otherwise Terminal. [Pick your own](#settings). |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/open-with-dark.png"><img src="docs/icons/open-with.png" width="20" height="20" alt=""></picture> | **Open&nbsp;Folder&nbsp;With&nbsp;▸** | Opens the current folder in an IDE or editor. Lists the ones you have installed (VS Code, Cursor, Windsurf, Zed, Sublime Text, JetBrains IDEs, Android Studio, Xcode…), plus **Other App…** to pick any app. |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/copy-path-dark.png"><img src="docs/icons/copy-path.png" width="20" height="20" alt=""></picture> | **Copy&nbsp;Path** | Copies the current folder's full path. |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/parent-folder-dark.png"><img src="docs/icons/parent-folder.png" width="20" height="20" alt=""></picture> | **Go&nbsp;to&nbsp;Parent&nbsp;Folder** | Moves the window up one level, even when Finder's Back button is greyed out (e.g. a window opened with `open .`). |
 
-Right-clicking a file or folder works too: **Copy Path** copies the selected items' paths, and **Open Terminal Here** and **Open Folder With** use the selected folder.
+Right-clicking a file or folder works too: **Copy Path** copies the selected items' paths, and **Open Terminal Here** and **Open Folder With** use the selected folder. Right-click a single file for **Use as Template…**, which opens New File with that file already chosen.
 
 The menu also appears on external drives, disk images and network shares (such as SMB), not just your Mac's own disk.
 
@@ -73,12 +73,13 @@ On macOS 26 and later the items have icons, like Finder's own. On earlier versio
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/templates-dark.png">
-    <img src="docs/images/templates-light.png" width="760" alt="Left: the New File dialog with notes.md typed as the name and Save as template ticked. Right: the New File submenu it adds, with New File… at the top, the templates notes.md, .env, README.md and todo.txt, and Manage Templates… at the bottom">
+    <img src="docs/images/templates-light.png" width="760" alt="Left: the New File dialog with notes.md, a From path under the name field, Save as template on the left and Use File as Template… on the right. Right: the New File submenu, with New File… at the top, the templates notes.md, .env, README.md and todo.txt, and Manage Templates… at the bottom">
   </picture>
 </p>
 
-1. Tick **Save as template** in the New File dialog.
-2. Next time, pick it under **New File** to create an empty `notes.md` in one click.
+1. Tick **Save as template** in the New File dialog to reuse an empty file of that name.
+2. Or pick a file you already have: **Use File as Template…** in the dialog, or **Use as Template…** when you right-click the file. The name field is filled in (you can edit it), and Create stores a copy under that name. The original file stays where it is.
+3. Next time, pick it under **New File**. You get a copy of the stored file.
 
 If the name is taken, you get `notes 2.md`, like in Finder. **Manage Templates…** removes templates.
 
@@ -187,7 +188,7 @@ From source:
 - `Sources/FinderMenuExtension` is a [Finder Sync extension](https://developer.apple.com/documentation/findersync) that adds the menu items to every folder. Finder only asks it about the drives it lists, so it lists every mounted drive and updates the list when one is mounted or ejected. Finder extensions must run sandboxed, so this part only reads the clicked folder and copies paths.
 - `Sources/FinderMenu` is a small helper app that isn't sandboxed and has no Dock icon. The extension hands it actions through a `findermenu://` URL, and the helper ignores those URLs from anything else. It creates the files, opens the terminal and moves the Finder window, then quits.
 - `Sources/Shared/Settings.swift` holds the list of menu items and reads the settings; `Sources/FinderMenu/SettingsWindow.swift` is the settings window. The helper writes the settings, and the extension only reads them.
-- `Sources/Shared/Templates.swift` holds the New File templates (saved file names). The extension builds the New File submenu from them, and the helper looks up the chosen template by id, so the file name never travels in the URL.
+- `Sources/Shared/Templates.swift` holds the New File templates. The extension builds the submenu from the saved names. The helper looks up the chosen template by id and copies the file it stored for that id, so the file name and contents never travel in the URL. A template that only has a name still creates an empty file.
 - `Sources/Shared/Editors.swift` is the IDE list. The extension builds the submenu from it, and the helper refuses links naming any app that isn't on it.
 - `scripts/build.sh` compiles and signs the app; `scripts/finder-menu enable|disable` copies it into `~/Applications` and turns the extension on or off. `install.sh`, `uninstall.sh` and the Homebrew formula all use these two.
 - `Resources/*.lproj` holds the translations, one folder per language. `scripts/build.sh` copies them into both the helper and the extension, because the extension shows the menu titles.
@@ -200,10 +201,10 @@ From source:
 You build Finder Menu yourself from this source, so there's no downloaded app to trust. Everything below can be checked in the code:
 
 - **No network access.** There's no networking code, so nothing is sent anywhere: no telemetry, no analytics, no update checks.
-- **Small enough to read.** About 900 lines of Swift and 185 lines of shell scripts (`install.sh`, `uninstall.sh` and `scripts/`). Read them before you run them.
+- **Small enough to read.** About 1,200 lines of Swift and 185 lines of shell scripts (`install.sh`, `uninstall.sh` and `scripts/`). Read them before you run them.
 - **Sandboxed Finder extension.** It can't read your files. It only gets the folder you right-click, the items you select and the list of mounted drives, plus read-only access to Finder Menu's own settings (which items to show, where, and with or without icons, plus any New File templates).
-- **The helper only acts when you pick a menu item.** It creates an empty file with the name you type or a template name you saved (never overwriting anything), opens a terminal or an app in a folder, or moves the Finder window up a level.
-- **Links from other apps are ignored.** The extension sends actions to the helper as `findermenu://` links. Other apps can send those links too, and so can a website after your browser asks you. Opening a folder they choose in a terminal or IDE could run code from it, so the helper checks the code signature of whatever sent each link and ignores any that didn't come from its own Finder extension. On top of that, it only acts on folders that exist, only opens apps from its built-in IDE list (or one you pick yourself), asks before a custom New File, and for templates only uses a file name you already saved (never taken from the URL).
+- **The helper only acts when you pick a menu item.** It creates an empty file with the name you type, or copies a template you saved (never overwriting anything), opens a terminal or an app in a folder, or moves the Finder window up a level.
+- **Links from other apps are ignored.** The extension sends actions to the helper as `findermenu://` links. Other apps can send those links too, and so can a website after your browser asks you. Opening a folder they choose in a terminal or IDE could run code from it, so the helper checks the code signature of whatever sent each link and ignores any that didn't come from its own Finder extension. On top of that, it only acts on folders that exist, only opens apps from its built-in IDE list (or one you pick yourself), asks before a custom New File, and for templates only copies a file it already stored for that template (the name and the path are never taken from the URL).
 - **One permission.** Go to Parent Folder asks once to control Finder. Finder Menu doesn't ask for Full Disk Access, Accessibility or anything else.
 - **Signed locally, not notarized.** `install.sh` signs the build on your Mac ("Sign to Run Locally"). It isn't notarized by Apple, because there's no download for Apple to check.
 
