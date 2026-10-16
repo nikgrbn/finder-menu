@@ -81,16 +81,23 @@ func render(_ px: Int) -> NSBitmapImageRep {
     return rep
 }
 
-func png(_ rep: NSBitmapImageRep) -> Data { rep.representation(using: .png, properties: [:])! }
+func png(_ px: Int, cache: inout [Int: Data]) -> Data {
+    if let data = cache[px] { return data }
+    let data = render(px).representation(using: .png, properties: [:])!
+    cache[px] = data
+    return data
+}
 
+// Drawing inputs are fixed for this run; retain encoded bytes, not bitmap or graphics-context state.
+var pngByPixelSize: [Int: Data] = [:]
 let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-try! png(render(512)).write(to: root.appendingPathComponent("docs/icon.png"))
+try! png(512, cache: &pngByPixelSize).write(to: root.appendingPathComponent("docs/icon.png"))
 let iconset = FileManager.default.temporaryDirectory.appendingPathComponent("AppIcon.iconset")
 try? FileManager.default.removeItem(at: iconset)
 try! FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 for pt in [16, 32, 128, 256, 512] {
-    try! png(render(pt)).write(to: iconset.appendingPathComponent("icon_\(pt)x\(pt).png"))
-    try! png(render(pt * 2)).write(to: iconset.appendingPathComponent("icon_\(pt)x\(pt)@2x.png"))
+    try! png(pt, cache: &pngByPixelSize).write(to: iconset.appendingPathComponent("icon_\(pt)x\(pt).png"))
+    try! png(pt * 2, cache: &pngByPixelSize).write(to: iconset.appendingPathComponent("icon_\(pt)x\(pt)@2x.png"))
 }
 let iconutil = Process()
 iconutil.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
