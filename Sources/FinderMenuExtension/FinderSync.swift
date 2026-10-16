@@ -32,6 +32,7 @@ class FinderMenuSync: FIFinderSync {
 
     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
         guard menuKind == .contextualMenuForContainer || menuKind == .contextualMenuForItems else { return nil }
+        Self.inOpenOrSaveDialog = Self.isOpenOrSaveDialog()
         let menu = NSMenu(title: "")
         for item in menuItems where !isHidden(item.id) {
             let entry = NSMenuItem(title: NSLocalizedString(item.title, comment: ""), action: nil, keyEquivalent: "")
@@ -59,12 +60,34 @@ class FinderMenuSync: FIFinderSync {
         return menu.items.isEmpty ? nil : menu
     }
 
+    // Other apps' Open and Save dialogs show this menu too, in that app's appearance, which can differ
+    // from the system's (an app with its own dark theme on a Mac in Light Mode). The extension can't see
+    // it, so symbol() would paint black icons on a dark menu. The dialog's own items have no icons, so
+    // ours go too. The menu is for the window under the pointer: Finder's (a window or the Desktop) or a dialog.
+    private static var inOpenOrSaveDialog = false
+
+    private static func isOpenOrSaveDialog() -> Bool {
+        guard let pointer = CGEvent(source: nil)?.location,
+              let windows = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] else { return false }
+        // Front to back, skipping invisible windows and those above app windows: menus, the menu bar and
+        // the Dock, whose window covers the whole screen.
+        let clicked = windows.first { window in
+            guard let layer = window[kCGWindowLayer as String] as? Int, layer <= NSWindow.Level.modalPanel.rawValue,
+                  (window[kCGWindowAlpha as String] as? Double ?? 1) > 0,
+                  let bounds = window[kCGWindowBounds as String] as? NSDictionary,
+                  let rect = CGRect(dictionaryRepresentation: bounds as CFDictionary) else { return false }
+            return rect.contains(pointer)
+        }
+        guard let pid = clicked?[kCGWindowOwnerPID as String] as? pid_t else { return false }
+        return NSRunningApplication(processIdentifier: pid)?.bundleIdentifier != "com.apple.finder"
+    }
+
     // Finder drops the template flag when it copies the menu, so SF Symbols would always render
     // black. Instead, bake the current appearance's text color into a plain bitmap each time.
     static func symbol(_ name: String, appearance: NSAppearance = NSApplication.shared.effectiveAppearance) -> NSImage? {
         // Show icons in settings, on by default only where Finder's own items have icons (macOS 26 and later).
         // App icons, as in Open Folder With, don't come from here: Finder's own Open With shows them on every version.
-        guard showsMenuIcons else { return nil }
+        guard showsMenuIcons, !inOpenOrSaveDialog else { return nil }
         guard let base = NSImage(systemSymbolName: name, accessibilityDescription: nil) else { return nil }
         var color = NSColor.black
         appearance.performAsCurrentDrawingAppearance {
