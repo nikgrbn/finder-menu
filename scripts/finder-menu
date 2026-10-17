@@ -91,7 +91,15 @@ terminal() {
       echo "Change it with: finder-menu terminal <app name>, or go back with: finder-menu terminal auto"
       ;;
     auto)
-      defaults delete local.findermenu Terminal 2>/dev/null || true
+      # Removing an absent key must remain a no-op without hiding persistence failures.
+      osascript -l JavaScript -e '
+        ObjC.import("CoreFoundation");
+        const domain = $("local.findermenu");
+        $.CFPreferencesSetAppValue($("Terminal"), null, domain);
+        if (!$.CFPreferencesAppSynchronize(domain)) {
+          throw new Error("Could not save the terminal preference reset.");
+        }
+      ' >/dev/null
       echo "Open Terminal Here will pick a terminal automatically."
       ;;
     *)
