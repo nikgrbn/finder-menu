@@ -21,13 +21,41 @@ for lproj in Resources/*.lproj; do
   cp -R "$lproj" "$EXT/Contents/Resources/"
 done
 
+# Separate process groups let interruption stop Swift's child processes too.
+set -m
+extension_pid=
+helper_pid=
+cleanup_compilers() {
+  for pid in "$extension_pid" "$helper_pid"; do
+    [ -n "$pid" ] || continue
+    kill -TERM -- "-$pid" 2>/dev/null || true
+  done
+  for pid in "$extension_pid" "$helper_pid"; do
+    [ -n "$pid" ] || continue
+    wait "$pid" 2>/dev/null || true
+  done
+}
+trap cleanup_compilers EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 xcrun swiftc -swift-version 5 -O -sdk "$SDK" -target "$TARGET" \
   -module-name FinderMenuExtension -parse-as-library -application-extension \
   -framework Cocoa -framework FinderSync -Xlinker -e -Xlinker _NSExtensionMain \
-  Sources/FinderMenuExtension/*.swift Sources/Shared/*.swift -o "$EXT/Contents/MacOS/FinderMenuExtension"
+  Sources/FinderMenuExtension/*.swift Sources/Shared/*.swift -o "$EXT/Contents/MacOS/FinderMenuExtension" &
+extension_pid=$!
 xcrun swiftc -swift-version 5 -O -sdk "$SDK" -target "$TARGET" \
   -module-name FinderMenu -framework Cocoa \
-  Sources/FinderMenu/*.swift Sources/Shared/*.swift -o "$APP/Contents/MacOS/FinderMenu"
+  Sources/FinderMenu/*.swift Sources/Shared/*.swift -o "$APP/Contents/MacOS/FinderMenu" &
+helper_pid=$!
+
+# Join both before signing; keep extension-first error precedence from the serial build.
+wait "$extension_pid"
+extension_pid=
+wait "$helper_pid"
+helper_pid=
+trap - EXIT INT TERM
+set +m
 
 # Ad-hoc signature ("Sign to Run Locally"). Finder extensions must be sandboxed.
 # The linker already ad-hoc signs the binaries, so hide codesign's "replacing existing signature".
