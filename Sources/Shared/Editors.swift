@@ -28,4 +28,5 @@ let editors: [(id: String, name: String)] = [
     ("com.apple.dt.Xcode", "Xcode"),
     ("com.panic.Nova", "Nova"),
     ("com.barebones.bbedit", "BBEdit"),
+    ("io.github.jony4.glimpse", "Glim"),
 ]
