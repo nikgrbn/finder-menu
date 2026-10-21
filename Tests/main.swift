@@ -37,6 +37,7 @@ let tests: [(name: String, run: () throws -> Void)] = [
     ("file names", testValidFilenames),
     ("unused file names", testUnusedFilename),
     ("folders from links", testFolderForLink),
+    ("open-with target paths", testOpenPathForLink),
     ("AppleScript strings", testAppleScriptString),
     ("terminal launch", testTerminalLaunch),
     ("translations", testTranslations),

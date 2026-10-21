@@ -56,3 +56,37 @@ func testFolderForLink() throws {
     checkEqual(folder(for: "sub folder"), nil)
     FileManager.default.changeCurrentDirectoryPath(cwd)
 }
+
+// Open-with links name a path; files open as files, folders as folders (#43).
+func testOpenPathForLink() throws {
+    let root = try makeTempFolder()
+    let sub = root + "/sub folder"
+    let file = sub + "/file.txt"
+    let app = root + "/Some.app"
+    try FileManager.default.createDirectory(atPath: sub, withIntermediateDirectories: true)
+    FileManager.default.createFile(atPath: file, contents: nil)
+    try FileManager.default.createDirectory(atPath: app + "/Contents", withIntermediateDirectories: true)
+    FileManager.default.createFile(atPath: app + "/Info.plist", contents: nil)
+    try FileManager.default.createSymbolicLink(atPath: root + "/Alias.app", withDestinationPath: app)
+
+    // Regular files open as files, not their containing folder.
+    checkEqual(openPath(for: file)?.path, file)
+    checkEqual(openPath(for: file)?.isDirectory, false)
+
+    // Folders open as folders.
+    checkEqual(openPath(for: sub)?.path, sub)
+    checkEqual(openPath(for: sub)?.isDirectory, true)
+    checkEqual(openPath(for: sub + "/")?.path, sub)
+    checkEqual(openPath(for: sub + "/")?.isDirectory, true)
+
+    // Packages resolve to their containing folder.
+    checkEqual(openPath(for: app)?.path, root)
+    checkEqual(openPath(for: app)?.isDirectory, true)
+    checkEqual(openPath(for: root + "/Alias.app")?.path, root)
+    checkEqual(openPath(for: root + "/Alias.app")?.isDirectory, true)
+
+    // Inside a package or nonexistent returns nil.
+    checkEqual(openPath(for: app + "/Info.plist")?.path, nil)
+    checkEqual(openPath(for: root + "/missing")?.path, nil)
+    checkEqual(openPath(for: "")?.path, nil)
+}

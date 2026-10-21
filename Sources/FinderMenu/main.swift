@@ -20,8 +20,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let c = URLComponents(url: url, resolvingAgainstBaseURL: false) else { continue }
             // Manage Templates… doesn't act on a folder.
             if c.host == "settings" { showSettings(); continue }
-            guard let path = c.queryItems?.first(where: { $0.name == "path" })?.value,
-                  let dir = folder(for: path) else { continue }
+            guard let path = c.queryItems?.first(where: { $0.name == "path" })?.value else { continue }
+            if c.host == "openwith" {
+                guard let target = openPath(for: path) else { continue }
+                let appID = c.queryItems?.first(where: { $0.name == "app" })?.value
+                // No app means "Other App…", where the user picks one themselves.
+                if let appID, !editors.contains(where: { $0.id == appID }) { continue }
+                openItem(target.path, isDirectory: target.isDirectory, appID: appID)
+                return
+            }
+            guard let dir = folder(for: path) else { continue }
             switch c.host {
             case "newfile":
                 // The file name comes from saved settings, not the URL — only the template id travels in the link.
@@ -33,12 +41,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     newFile(in: dir)
                 }
             case "terminal": openTerminal(at: dir); return
-            case "openwith":
-                let appID = c.queryItems?.first(where: { $0.name == "app" })?.value
-                // No app means "Other App…", where the user picks one themselves.
-                if let appID, !editors.contains(where: { $0.id == appID }) { continue }
-                openFolder(dir, appID: appID)
-                return
             case "up": goUp(from: dir)
             default: break
             }
@@ -189,24 +191,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // No app ID means "Other App…": let the user pick any app.
-    private func openFolder(_ dir: String, appID: String?) {
+    private func openItem(_ path: String, isDirectory: Bool, appID: String?) {
         if let appID {
-            open(dir, withAppAt: NSWorkspace.shared.urlForApplication(withBundleIdentifier: appID))
+            open(path, isDirectory: isDirectory, withAppAt: NSWorkspace.shared.urlForApplication(withBundleIdentifier: appID))
             return
         }
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSOpenPanel()
         let openFormat = NSLocalizedString("Open “%@” with:", comment: "")
-        panel.message = String(format: openFormat, (dir as NSString).lastPathComponent)
+        panel.message = String(format: openFormat, (path as NSString).lastPathComponent)
         panel.prompt = NSLocalizedString("Open", comment: "")
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.allowedContentTypes = [.application]
-        open(dir, withAppAt: panel.runModal() == .OK ? panel.url : nil)
+        open(path, isDirectory: isDirectory, withAppAt: panel.runModal() == .OK ? panel.url : nil)
     }
 
-    private func open(_ dir: String, withAppAt app: URL?) {
+    private func open(_ path: String, isDirectory: Bool = true, withAppAt app: URL?) {
         guard let app else { finish(); return }
-        NSWorkspace.shared.open([URL(fileURLWithPath: dir, isDirectory: true)], withApplicationAt: app,
+        NSWorkspace.shared.open([URL(fileURLWithPath: path, isDirectory: isDirectory)], withApplicationAt: app,
                                 configuration: NSWorkspace.OpenConfiguration()) { _, _ in
             DispatchQueue.main.async { self.finish() }
         }
