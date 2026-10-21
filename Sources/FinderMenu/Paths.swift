@@ -14,6 +14,16 @@ func folder(for path: String) -> String? {
     return isPackage(dir) ? nil : dir
 }
 
+// Resolves an existing path for the open-with action. Regular files open as files;
+// folders and packages resolve to a folder.
+func openPath(for path: String) -> (path: String, isDirectory: Bool)? {
+    guard let dir = folder(for: path) else { return nil }
+    let path = (path as NSString).standardizingPath
+    var isDir: ObjCBool = false
+    FileManager.default.fileExists(atPath: path, isDirectory: &isDir)
+    return isPackage(path) ? (dir, true) : (path, isDir.boolValue)
+}
+
 // Checks the real location, so a symlink to an .app counts as a package too.
 func isPackage(_ path: String) -> Bool {
     NSWorkspace.shared.isFilePackage(atPath: (path as NSString).resolvingSymlinksInPath)
