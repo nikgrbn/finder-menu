@@ -128,17 +128,17 @@ final class SettingsWindowController: NSWindowController {
             for template in templates {
                 templatesStack.addArrangedSubview(templateRow(template))
             }
-            if templates.count > 1 {
-                let removeAll = smallButton(NSLocalizedString("Remove All", comment: ""), action: #selector(removeAllTemplates(_:)))
-                let row = NSStackView(views: [NSView(), removeAll])
-                row.orientation = .horizontal
-                row.alignment = .centerY
-                row.distribution = .fill
-                // A little apart from the rows, so it doesn't read as another template.
-                templatesStack.setCustomSpacing(12, after: templatesStack.arrangedSubviews.last!)
-                templatesStack.addArrangedSubview(row)
-            }
         }
+        let restore = smallButton(NSLocalizedString("Restore Preset Templates", comment: ""), action: #selector(restoreTemplates(_:)))
+        let actions = NSStackView(views: [restore, NSView()])
+        actions.orientation = .horizontal
+        actions.alignment = .centerY
+        actions.distribution = .fill
+        if templates.count > 1 {
+            actions.addArrangedSubview(smallButton(NSLocalizedString("Remove All", comment: ""), action: #selector(removeAllTemplates(_:))))
+        }
+        templatesStack.setCustomSpacing(12, after: templatesStack.arrangedSubviews.last!)
+        templatesStack.addArrangedSubview(actions)
         resizeToFit()
     }
 
@@ -186,6 +186,11 @@ final class SettingsWindowController: NSWindowController {
 
     @objc private func removeAllTemplates(_ sender: Any?) {
         fileTemplates = []
+        reloadTemplates()
+    }
+
+    @objc private func restoreTemplates(_ sender: Any?) {
+        restorePresetFileTemplates()
         reloadTemplates()
     }
 
