@@ -5,7 +5,8 @@ import Foundation
 // the sources it covers and runs it from the repository root.
 //
 // Never touch `settings` or anything that reads it (fileTemplates, isHidden, chosenTerminal…):
-// outside the app bundle it is the real local.findermenu preferences.
+// outside the app bundle it is the real local.findermenu preferences. Template tests inject
+// a temporary UserDefaults suite into FileTemplateStore instead.
 
 var failures = 0
 
@@ -37,6 +38,10 @@ let tests: [(name: String, run: () throws -> Void)] = [
     ("file names", testValidFilenames),
     ("unused file names", testUnusedFilename),
     ("folders from links", testFolderForLink),
+    ("preset templates", testPresetTemplates),
+    ("saved template choices", testSavedTemplateChoices),
+    ("restore preset templates", testRestorePresetTemplates),
+    ("malformed template entries", testMalformedTemplateEntries),
     ("AppleScript strings", testAppleScriptString),
     ("terminal launch", testTerminalLaunch),
     ("translations", testTranslations),

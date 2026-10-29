@@ -78,10 +78,11 @@ On macOS 26 and later the items have icons, like Finder's own. On earlier versio
   </picture>
 </p>
 
-1. Tick **Save as template** in the New File dialog.
-2. Next time, pick it under **New File** to create an empty `notes.md` in one click.
+New installations include empty-file presets named `untitled.txt`, `untitled.md`, `untitled.json`, `untitled.yaml`, `untitled.csv`, `untitled.html`, `untitled.css`, `untitled.js`, `untitled.ts`, `untitled.py` and `untitled.sh`. Pick one under **New File** to create it in one click.
 
-If the name is taken, you get `notes 2.md`, like in Finder. **Manage Templates…** removes templates.
+To save your own name, tick **Save as template** in the New File dialog. Next time, pick it under **New File** to create an empty `notes.md` in one click.
+
+If the name is taken, you get `notes 2.md`, like in Finder. **Manage Templates…** lets you remove individual templates or all of them. Removed presets stay removed. **Restore Preset Templates** adds any missing presets without replacing your custom templates or creating duplicates. Existing saved template lists are kept on upgrade; use this button to add the presets.
 
 ## Install
 
@@ -125,7 +126,7 @@ Open **Finder Menu** from Spotlight or your Applications folder, or run `finder-
 - choose whether the menu also appears on external and network drives (it does by default)
 - turn the menu's icons on or off (by default they follow Finder: on in macOS 26 and later, off before)
 - pick the terminal for **Open Terminal Here**. Automatic uses the first one installed, in this order: iTerm2, Ghostty, Warp, WezTerm, kitty, Alacritty, Terminal. **Other App…** lets you pick any app.
-- remove [New File templates](#new-file-templates)
+- remove [New File templates](#new-file-templates) or restore the built-in presets
 
 It also shows the version you have and links to this page. **About Finder Menu** in the app menu shows the same.
 
@@ -188,7 +189,7 @@ From source:
 - `Sources/FinderMenuExtension` is a [Finder Sync extension](https://developer.apple.com/documentation/findersync) that adds the menu items to every folder. Finder only asks it about the drives it lists, so it lists every mounted drive and updates the list when one is mounted or ejected. Finder extensions must run sandboxed, so this part only reads the clicked folder and copies paths and names.
 - `Sources/FinderMenu` is a small helper app that isn't sandboxed and has no Dock icon. The extension hands it actions through a `findermenu://` URL, and the helper ignores those URLs from anything else. It creates the files, opens the terminal and moves the Finder window, then quits.
 - `Sources/Shared/Settings.swift` holds the list of menu items and reads the settings; `Sources/FinderMenu/SettingsWindow.swift` is the settings window. The helper writes the settings, and the extension only reads them.
-- `Sources/Shared/Templates.swift` holds the New File templates (saved file names). The extension builds the New File submenu from them, and the helper looks up the chosen template by id, so the file name never travels in the URL.
+- `Sources/Shared/Templates.swift` holds the New File presets and saved file names. Presets apply only when no template list has been saved, and have stable ids shared by the extension and helper. The extension builds the New File submenu from them, and the helper looks up the chosen template by id, so the file name never travels in the URL.
 - `Sources/Shared/Editors.swift` is the IDE list. The extension builds the submenu from it, and the helper refuses links naming any app that isn't on it.
 - `scripts/build.sh` compiles and signs the app; `scripts/finder-menu enable|disable` copies it into `~/Applications` and turns the extension on or off. `install.sh`, `uninstall.sh` and the Homebrew formula all use these two.
 - `Resources/*.lproj` holds the translations, one folder per language. `scripts/build.sh` copies them into both the helper and the extension, because the extension shows the menu titles.
